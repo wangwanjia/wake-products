@@ -2,7 +2,10 @@
 /node_modules/
 .next/
 
-
+# 忽略 Vite、Next.js、Nuxt 等构建产物
+.next/
+dist/
+build/
 
 # 忽略 .git 目录下的所有内容
  *.log
