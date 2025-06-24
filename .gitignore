@@ -1,6 +1,10 @@
 # 忽略 node_modules 目录下的所有内容
-/node_modules/
+**/node_modules/
+node_modules/
 .next/
+
+
+
 
 # 忽略 Vite、Next.js、Nuxt 等构建产物
 .next/
