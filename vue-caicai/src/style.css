@@ -2,8 +2,6 @@
 
 
 /* 自定义主题颜色 */
-
-
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -36,10 +34,10 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
+  /* display: flex;
   place-items: center;
   min-width: 320px;
-  min-height: 100vh;
+  min-height: 100vh; */
 }
 
 h1 {
@@ -71,10 +69,10 @@ button:focus-visible {
 }
 
 #app {
-  max-width: 1280px;
+  /* max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
-  text-align: center;
+  text-align: center; */
 }
 
 @media (prefers-color-scheme: light) {
@@ -88,4 +86,342 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+
+
+/* ===== 渐入渐出动画效果 ===== */
+
+/* 基础渐入渐出 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+/* 从下方滑入渐出 */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideOutDown {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+}
+
+/* 从上方滑入渐出 */
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideOutUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+}
+
+/* 缩放渐入渐出 */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes scaleOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+/* 从左侧滑入渐出 */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutLeft {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+}
+
+/* 从右侧滑入渐出 */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+}
+
+/* 旋转渐入渐出 */
+@keyframes rotateIn {
+  from {
+    opacity: 0;
+    transform: rotate(-180deg) scale(0.8);
+  }
+
+  to {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+@keyframes rotateOut {
+  from {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: rotate(180deg) scale(0.8);
+  }
+}
+
+/* ===== CSS 类定义 ===== */
+
+/* 基础渐入渐出类 */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out forwards;
+}
+
+.fade-out {
+  animation: fadeOut 0.5s ease-in-out forwards;
+}
+
+/* 滑入滑出类 */
+.slide-in-up {
+  animation: slideInUp 0.6s ease-out forwards;
+}
+
+.slide-out-down {
+  animation: slideOutDown 0.6s ease-in forwards;
+}
+
+.slide-in-down {
+  animation: slideInDown 0.6s ease-out forwards;
+}
+
+.slide-out-up {
+  animation: slideOutUp 0.6s ease-in forwards;
+}
+
+.slide-in-left {
+  animation: slideInLeft 0.6s ease-out forwards;
+}
+
+.slide-out-left {
+  animation: slideOutLeft 0.6s ease-in forwards;
+}
+
+.slide-in-right {
+  animation: slideInRight 0.6s ease-out forwards;
+}
+
+.slide-out-right {
+  animation: slideOutRight 0.6s ease-in forwards;
+}
+
+/* 缩放类 */
+.scale-in {
+  animation: scaleIn 0.4s ease-out forwards;
+}
+
+.scale-out {
+  animation: scaleOut 0.4s ease-in forwards;
+}
+
+/* 旋转类 */
+.rotate-in {
+  animation: rotateIn 0.8s ease-out forwards;
+}
+
+.rotate-out {
+  animation: rotateOut 0.8s ease-in forwards;
+}
+
+/* 延迟动画类 */
+.delay-100 {
+  animation-delay: 0.1s;
+}
+
+.delay-200 {
+  animation-delay: 0.2s;
+}
+
+.delay-300 {
+  animation-delay: 0.3s;
+}
+
+.delay-500 {
+  animation-delay: 0.5s;
+}
+
+/* 动画时长类 */
+.duration-fast {
+  animation-duration: 0.3s;
+}
+
+.duration-normal {
+  animation-duration: 0.5s;
+}
+
+.duration-slow {
+  animation-duration: 0.8s;
+}
+
+.duration-slower {
+  animation-duration: 1.2s;
+}
+
+/* Vue Transition 配合使用的类 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.5s ease;
+}
+
+.slide-up-enter-from {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(-30px);
+}
+
+.scale-enter-active,
+.scale-leave-active {
+  transition: all 0.4s ease;
+}
+
+.scale-enter-from,
+.scale-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+/* 特殊效果组合 */
+.appear-with-bounce {
+  animation: fadeIn 0.6s ease-out forwards,
+    scaleIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+.smooth-appear {
+  animation: fadeIn 0.8s ease-out forwards,
+    slideInUp 0.8s ease-out forwards;
+}
+
+/* 悬停效果 */
+.hover-scale {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
+}
+
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }

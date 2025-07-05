@@ -1,24 +1,43 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import { useUserStore } from '@/store/modules/user'
-import { getToken } from '@/utils/auth'
-import { constantRoutes } from '@/router/constantRoutes'
+// import { useUserStore } from '@/store/modules/user'
+// import { getToken } from '@/utils/auth'
+// import { constantRoutes } from '@/router/constantRoutes'
+
+
 
 const routes = [
-  {
-    path: '/login',
-    component: () => import('@/views/login/index.vue')
-  },
+  // 客户端页面
   {
     path: '/',
-    component: () => import('@/views/layout/index.vue'),
-    redirect: '/home',
+    component: () => import('@/layout/client/index.vue'),
     children: [
       {
-        path: '/home',
-        component: () => import('@/views/home/index.vue')
+        path: '',
+        component: () => import('@/views/client/home/index.vue')
+      },
+      {
+        path: 'home',
+        component: () => import('@/views/client/home/index.vue')
       }
     ]
   },
+  // 后台页面
+  {
+    path: '/admin',
+    component: () => import('@/layout/admin/index.vue'),
+    redirect: 'admin/home',
+    children: [
+      {
+        path: '',
+        component: () => import('@/views/admin/home/index.vue')
+      },
+      {
+        path: 'home',
+        component: () => import('@/views/admin/home/index.vue')
+      }
+    ]
+  },
+  // 公共页面
   {
     path: '/404',
     component: () => import('@/views/404/index.vue'),
