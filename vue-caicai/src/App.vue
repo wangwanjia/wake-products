@@ -2,7 +2,7 @@
 </script>
 
 <template>
-  <main>
+  <main class="scheme-light dark:scheme-dark">
     <router-view />
   </main>
 </template>

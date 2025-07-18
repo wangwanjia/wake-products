@@ -1,4 +1,4 @@
-import { createRouter, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 // import { useUserStore } from '@/store/modules/user'
 // import { getToken } from '@/utils/auth'
 // import { constantRoutes } from '@/router/constantRoutes'
@@ -53,7 +53,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHashHistory(),
+  history: createWebHistory(),
   routes
 })
 
