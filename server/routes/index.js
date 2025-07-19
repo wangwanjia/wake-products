@@ -1,25 +1,30 @@
-import fs from 'fs/promises';
-import path from 'path';
-import Router from 'koa-router';
-import { fileURLToPath } from 'url';
+const fs = require('fs/promises');
+const path = require('path');
+const Router = require('koa-router');
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+function useRoutes(app) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const files = await fs.readdir(__dirname);
+      const router = new Router({ prefix: '/api' });
 
-export default async function useRoutes(app) {
-  const files = await fs.readdir(__dirname);
-  const router = new Router({ prefix: '/api' });
+      for (const file of files) {
+        if (file === 'index.js') continue;
 
-  for (const file of files) {
-    if (file === 'index.js') continue;
+        const modulePath = path.join(__dirname, file);
+        const route = require(modulePath);
 
-    const module = await import(`./${file}`);
-    const route = module.default;
+        if (typeof route?.routes === 'function') {
+          router.use(route.routes()).use(route.allowedMethods());
+        }
+      }
 
-    if (typeof route?.routes === 'function') {
-      router.use(route.routes()).use(route.allowedMethods());
+      app.use(router.routes()).use(router.allowedMethods());
+      resolve();
+    } catch (err) {
+      reject(err);
     }
-  }
-
-  app.use(router.routes()).use(router.allowedMethods());
+  });
 }
+
+module.exports = useRoutes;

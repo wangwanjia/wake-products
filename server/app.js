@@ -1,64 +1,81 @@
-import Koa from 'koa';
-import {koaBody} from 'koa-body';
-import path from 'path';
-import KoaStatic from 'koa-static';
-// import uploadRoutes from './routes/upload.js';
+const Koa = require('koa');
+const { koaBody } = require('koa-body');
+const path = require('path');
+const KoaStatic = require('koa-static');
 
-import cors from '@koa/cors';
-import dotenv from 'dotenv';
-import sequelize from './config/db.js';
+const cors = require('@koa/cors');
+const database = require('./config/database.js');
 
-import useRoutes from './routes/index.js';
-import errorHandler from './middlewares/errorHandler.js';
-import logger from './middlewares/logger.js';
+const useRoutes = require('./routes/index.js');
+const {errorHandler} = require('./middlewares/errorHandler.js');
+const logger = require('./middlewares/logger.js');
 
-dotenv.config();
+require('dotenv').config();
 
 const app = new Koa();
 
-// 中间件
-app.use(cors());
 
-// 解析请求体
-app.use(
+// 定义异步启动函数
+async function startServer() {
+  try {
+    const db = require('./models/index.js');
+    console.log('加载的模型:', Object.keys(db));
+    // 初始化数据库连接
+    // 使用更安全的同步方式，避免因外键约束导致的删除表失败
+    // 在开发环境可以使用{ force: true }强制删除并重建所有表
+    // 但在生产环境应该使用迁移文件
+    await database.sync({
+      force: false, // 不删除现有表
+      alter: false, // 不修改现有表结构
+      logging: console.log // 打印同步日志，方便调试
+    }); 
+    console.log('数据库同步成功');   
+  } catch (err) {
+    console.error('数据库同步失败:', err);
+    process.exit(1);
+  } 
+
+  // 中间件 
+  // 错误处理 - 应该放在最前面
+  app.use(errorHandler);
+  // 允许跨域
+  app.use(cors());
+
+  // 上传过滤中间件 - 只允许特定接口上传文件
+  const uploadFilter = require('./middlewares/uploadFilter');
+  app.use(uploadFilter);
+
+  // 解析请求体
+  app.use(
     koaBody({
-        multipart: true,
-        formidable: {
-            uploadDir: path.resolve('uploads'), // ✅ 保证是绝对路径
-            keepExtensions: true,
-            maxFileSize: 10 * 1024 * 1024, // 50MB 限制
-            onFileBegin: (name, file) => {
-                // 重命名文件，保留原始扩展名
-                const ext = path.extname(file.originalFilename);
-                const filename  = `${Date.now()}${ext}`;
-                file.newFilename = filename ;
-                file.filepath = path.resolve('uploads', filename ); // ✅ 设置保存路径
-            }
+      multipart: true,
+      formidable: {
+        keepExtensions: true,
+        maxFileSize: 100 * 1024 * 1024, // 100MB 限制
+        onFileBegin: (name, file) => {
+          // 重命名文件，保留原始扩展名
+          const ext = path.extname(file.originalFilename);
+          const filename  = `${Date.now()}${ext}`;
+          file.newFilename = filename ;
+          // 直接保存到最终目录，不使用临时目录
+          file.filepath = path.resolve('uploads', filename );
         }
+      }
     })
-);
-// 静态文件服务
-app.use(KoaStatic(path.join(process.cwd(), 'uploads')));
+  );
+  
 
-// 错误处理
-app.use(errorHandler);
-app.use(logger); // ✅ 注册日志中间件
-// 路由注册
-useRoutes(app);
+  // 静态文件服务
+  app.use(KoaStatic(path.join(process.cwd(), 'uploads')));
 
-// 启动服务
-const PORT = process.env.PORT || 4000;
+  app.use(logger); // ✅ 注册日志中间件
+  // 路由注册
+  useRoutes(app);
 
-(async () => {
-    try {
-        await sequelize.authenticate();
-        console.log('✅ MySQL 连接成功');
-        await sequelize.sync(); // 自动建表
+  const PORT = process.env.PORT || 4000;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
 
-        app.listen(PORT, () => {
-            console.log(`✅ Server running at http://localhost:${PORT}`);
-        });
-    } catch (err) {
-        console.error('❌ 数据库连接失败:', err);
-    }
-})();
+startServer();

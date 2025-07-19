@@ -1,17 +1,17 @@
 // routes/posts.js
-import Router from 'koa-router';
+const Router = require('koa-router');
 const router = new Router({ prefix: '/posts' });
 
-import {
+const {
     getPosts,
     getPostById,
     createPost
-  } from '../controllers/postsController.js';
+  } = require('../controllers/posts.controller.js');
   
 
 router.get('/', getPosts);
 router.get('/:id', getPostById);
 router.post('/', createPost);
 
-export default router;
+module.exports = router;
 
