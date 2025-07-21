@@ -1,13 +1,13 @@
 {
-  "name": "server",
+  "name": "caicai-server",
   "version": "1.0.0",
-  "description": "",
+  "description": "彩彩服务器",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon app.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "wake",
   "license": "ISC",
   "packageManager": "pnpm@10.10.0",
   "dependencies": {

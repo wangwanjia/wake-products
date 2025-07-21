@@ -25,11 +25,19 @@ async function startServer() {
     // 在开发环境可以使用{ force: true }强制删除并重建所有表
     // 但在生产环境应该使用迁移文件
     await database.sync({
-      force: false, // 不删除现有表
-      alter: false, // 不修改现有表结构
+      force: true, // 不删除现有表
+      // alter: true, // 不修改现有表结构
       logging: console.log // 打印同步日志，方便调试
     }); 
-    console.log('数据库同步成功');   
+    console.log('数据库同步成功');
+
+    // 初始化Insert表数据
+    try {
+      await db.Insert.initData();
+      console.log('Insert表数据初始化成功');
+    } catch (error) {
+      console.error('Insert表数据初始化失败:', error);
+    }
   } catch (err) {
     console.error('数据库同步失败:', err);
     process.exit(1);
