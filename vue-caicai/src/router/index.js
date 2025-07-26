@@ -18,6 +18,26 @@ const routes = [
       {
         path: 'home',
         component: () => import('@/views/client/home/index.vue')
+      },
+       {
+        path: 'postDetail',
+        component: () => import('@/views/client/postDetails/index.vue')
+      },
+      {
+        path: 'rule',
+        component: () => import('@/views/client/rule/index.vue')
+      },
+      {
+        path:"recharge",
+        component: () => import('@/views/client/recharge/index.vue')
+      },
+      {
+        path:"register",
+        component: () => import('@/views/client/register/index.vue')
+      },
+      {
+        path:"login",
+        component: () => import('@/views/client/login/index.vue')
       }
     ]
   },
@@ -34,7 +54,8 @@ const routes = [
       {
         path: 'home',
         component: () => import('@/views/admin/home/index.vue')
-      }
+      },
+     
     ]
   },
   // 公共页面
@@ -54,7 +75,8 @@ const routes = [
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
+
 })
 
 export default router;

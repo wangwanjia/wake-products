@@ -1,4 +1,4 @@
-//网站的配置
+
 module.exports = (sequelize, DataTypes) => {
   const Caicai = sequelize.define('Caicai', {
     name: {
@@ -22,31 +22,24 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true,
       comment: '背景大图路径'
     },
-    bannerImage: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      comment: '论坛banner图'
+    isMacao: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: false,
+      comment: '是否开启macao'
     },
-    headerCode: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-      comment: '头部代码'
+    isMacaoNew: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: false,
+      comment: '是否开启macao_new'
     },
-    footerCode: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-      comment: '底部代码'
+    isHongkong: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: false,
+      comment: '是否开启hongkong'
     },
-    articleHeaderCode: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-      comment: '文章内头部代码'
-    },
-    articleFooterCode: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-      comment: '文章内底部代码'
-    }
   }, {
     timestamps: true,
     freezeTableName: true

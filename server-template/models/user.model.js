@@ -9,9 +9,6 @@ module.exports = (sequelize, DataTypes) => {
     },
     account: {
       type: DataTypes.STRING,
-      validate: {
-        len: [4,30]
-      },
       unique: true,
       allowNull: false,
       comment: '账号'
@@ -35,12 +32,12 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: 'default-avatar.jpg',
       comment: '头像'
     },
-    // 管理员
-    open: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
+    // 角色:彩cai管理员、普通用户、超级用户
+    role: {
+      type: DataTypes.ENUM('caicai_admin', 'regular_user', 'super_user'),
+      defaultValue: 'regular_user',
       allowNull: false,
-      comment: '是否管理员'
+      comment: '角色:彩cai管理员、普通用户、超级用户'
     },
     // 用户等级，默认1级
     level: {
@@ -83,12 +80,25 @@ module.exports = (sequelize, DataTypes) => {
       comment: '历史金币'
     },
     // 购买的帖子ID列表
-    purchasedPostIds: {
+    purchasedPostIdsMacao: {
       type: DataTypes.JSON,
       defaultValue: [],
       allowNull: false,
-      comment: '购买的帖子ID列表'
+      comment: '购买的帖子ID列表 澳门'
     },
+    // 购买的帖子ID列表
+    purchasedPostIdsMacaoNew: {
+      type: DataTypes.JSON,
+      defaultValue: [],
+      allowNull: false,
+      comment: '购买的帖子ID列表 新澳门'
+    },
+    purchasedArticleIdsHongkong: {
+      type: DataTypes.JSON,
+      defaultValue: [],
+      allowNull: false,
+      comment: '购买的文章ID列表 香港'
+    }
   }, {
     timestamps: true,
     freezeTableName: true

@@ -30,7 +30,14 @@ async function startServer() {
       logging: console.log // 打印同步日志，方便调试
     }); 
     console.log('数据库同步成功');
-    
+
+    // 初始化Insert表数据
+    try {
+      await db.Insert.initData();
+      console.log('Insert表数据初始化成功');
+    } catch (error) {
+      console.error('Insert表数据初始化失败:', error);
+    }
   } catch (err) {
     console.error('数据库同步失败:', err);
     process.exit(1);
@@ -43,7 +50,7 @@ async function startServer() {
   app.use(cors());
 
   // 上传过滤中间件 - 只允许特定接口上传文件
-  const uploadFilter = require('./middlewares/uploadFilter');
+  const uploadFilter = require('./middlewares/uploadFilter.js');
   app.use(uploadFilter);
 
   // 解析请求体

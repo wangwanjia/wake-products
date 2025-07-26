@@ -1,26 +1,18 @@
 // 订单模型
 module.exports = (sequelize, DataTypes) => {
   const Order = sequelize.define('Order', {
-    // 论坛类型
-    forumType: {
-      type: DataTypes.ENUM('macao', 'macao_new', 'hongkong'),
-      unique: true,
-      allowNull: false,
-      comment: '论坛类型:macao,macao_new,hongkong'
-    },
-    // 帖子ID
-    postId: {
+    // 文章ID
+    articleId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      comment: '帖子ID'
+      comment: '文章ID'
     },
-    // 帖子标题
-    postTitle: {
+    // 文章标题
+    articleTitle: {
       type: DataTypes.STRING,
       allowNull: false,
-      comment: '帖子标题'
+      comment: '文章标题'
     },
-    
     // 订单号
     orderNumber: {
       type: DataTypes.STRING,
@@ -67,14 +59,14 @@ module.exports = (sequelize, DataTypes) => {
     freezeTableName: true
   });
 
-// // 订单模型关联用户模型
+  // 订单模型关联用户模型
 //   Order.belongsTo(sequelize.models.User, {
 //     foreignKey: 'userId',
 //     targetKey: 'id'
 //   });
-//   // 订单模型关联帖子模型
-//   Order.belongsTo(sequelize.models.Posts, {
-//     foreignKey: 'postId',
+//   // 订单模型关联文章模型
+//   Order.belongsTo(sequelize.models.Article, {
+//     foreignKey: 'articleId',
 //     targetKey: 'id'
 //   });
 

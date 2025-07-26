@@ -6,9 +6,8 @@
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
   color-scheme: light dark;
-  /* color: rgba(255, 255, 255, 0.87); */
+  color: #000;
   /* background-color: #fff; */
 
   font-synthesis: none;
@@ -21,14 +20,23 @@
   --primary: #039e6d;
   --secondary: #535bf2;
   --active: #646cff;
+
+  --bg-color: #DE881E;
+  --bg-active: #ff3333;
+
   /* 主题色 红绿蓝 */
-  
+  --red: #ff3333;
+  --green: #13cb46;
+  --blue: #3399ff;
+
+
+
 }
 
 a {
-  font-weight: 500;
+  /* font-weight: 500;
   color: #646cff;
-  text-decoration: inherit;
+  text-decoration: inherit; */
 }
 a:hover {
   color: #535bf2;
@@ -42,11 +50,6 @@ body {
   min-height: 100vh; */
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
 button {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -54,16 +57,19 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: var(--bg-color);
   cursor: pointer;
   transition: border-color 0.25s;
+  transition: all 0.3s ease-in-out;
 }
 button:hover {
-  border-color: #646cff;
+  background-color: var(--bg-active);
+  transform: scale(1.1);
 }
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  /* outline: 4px auto -webkit-focus-ring-color; */
+  /* background-color: var(--active); */
 }
 
 .card {
@@ -433,3 +439,47 @@ button:focus-visible {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
+
+
+/* element-plus 元素颜色 */
+.el-input {
+    --el-input-focus-border: var(--primary);
+    --el-input-focus-border-color: var(--primary);
+    --el-color-primary: var(--primary);
+}
+
+/* 自定义样式 */
+.red-code {
+  background-image: url(@/assets/images/bg-red.png);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: var(--red);
+  text-align: center;
+  border-radius: 50%;
+}
+.blue-code {
+  background-image: url(@/assets/images/bg-blue.png);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: var(--blue);
+  text-align: center;
+  border-radius: 50%;
+}
+.green-code {
+  background-image: url(@/assets/images/bg-green.png);  
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: var(--green);
+  text-align: center;
+  border-radius: 50%;
+}
+
+
+.c-wrap{
+  padding: 0 8px;
+}
+
+
