@@ -25,8 +25,8 @@ async function startServer() {
     // 在开发环境可以使用{ force: true }强制删除并重建所有表
     // 但在生产环境应该使用迁移文件
     await database.sync({
-      force: true, // 不删除现有表
-      // alter: true, // 不修改现有表结构
+      // force: true, // 不删除现有表
+      alter: false, // 不修改现有表结构
       logging: console.log // 打印同步日志，方便调试
     }); 
     console.log('数据库同步成功');
@@ -49,6 +49,7 @@ async function startServer() {
   // 解析请求体
   app.use(
     koaBody({
+      parsedMethods: ['POST', 'PUT', 'GET', 'DELETE'], // 只解析这些方法的请求体
       multipart: true,
       formidable: {
         keepExtensions: true,
@@ -70,6 +71,7 @@ async function startServer() {
   app.use(KoaStatic(path.join(process.cwd(), 'uploads')));
 
   app.use(logger); // ✅ 注册日志中间件
+
   // 路由注册
   useRoutes(app);
 

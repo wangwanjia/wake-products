@@ -2,7 +2,7 @@
   <div class="w-full">
 
     <div class="slide-in-up flex justify-center items-center py-2 md:py-4">
-      <input v-model="searchText" type="text" placeholder="搜索帖子" class="text-sm md:text-lg min-w-[70%] py-1 px-2 rounded-[8px] border-1 border-solid border-(--primary) focus:border-(--primary) ">
+      <input v-model="searchText" type="text" placeholder="搜索帖子" class="outline-none text-sm md:text-lg min-w-[70%] py-1 px-2 rounded-[8px] border-1 border-solid border-(--primary) focus:border-(--primary) ">
       <button type="submit" @click="search" class="bg-(--primary) text-white px-2! py-1! rounded-[8px] ml-2 min-w-[50px] text-md md:text-lg">搜索</button>
       <button type="reset" @click="reset" class="bg-(--primary) text-white px-2! py-1! rounded-[8px] ml-2 min-w-[50px] text-md md:text-lg">重置</button>
     </div>
