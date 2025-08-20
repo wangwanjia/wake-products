@@ -1,5 +1,6 @@
 <template>
-  <div class="desc">插入代码</div>
+  <!-- 文章头部代码 -->
+  <div class="desc" v-html="webConfigStore.webConfig.postHeaderCode"></div>
 
   <div
     class="fade-in w-full bg-(--primary) flex justify-center items-center py-1 md:py-2 px-2"
@@ -21,7 +22,7 @@
         <Icon name="pro" class="max-md:w-[16px] max-md:h-[16px]"></Icon>
       </div>
     </div>
-    <!-- 退出登录 -->
+    <!-- 返回 -->
     <button
       @click="goBack"
       class="ml-auto text-white max-md:py-1! max-md:px-2! text-xs! font-bold!"
@@ -37,7 +38,7 @@
     >
       206期：顺意發高手【寻彩百度💯⒖码中特】已审核准予出售
     </h1>
-    <p class="text-sm md:text-lg my-2 center gap-10 font-bold">
+    <p class="text-sm md:text-lg my-8 center gap-10 font-bold">
       <span>作者：寻彩百度</span>
       <span>浏览量：1000</span>
     </p>
@@ -45,21 +46,24 @@
         <!-- 免费内容 -->
       <div
         v-for="(item, index) in 10"
-        class="text-md md:text-2xl px-2 py-1 bg-(--primary) text-white rounded-md my-2"
+        class="text-md md:text-2xl px-2 py-2  rounded-md my-2"
       >
-        179期: 《寻彩百度》 🚗一①码中特🚗 【<span
-          class="bg-(--red) font-bold rounded-sm px-1"
-          >42</span
-        >】 开: <span class="text-(--bg-color) font-bold">24</span> 错
+      <span class="font-bold bg-(--blue) px-1 rounded-sm">179</span>  
+      期: 《寻彩百度》 
+      🚗一①码中特🚗 
+      【<span class="bg-(--red) font-bold rounded-sm px-1">42</span>】 
+      开: 
+      <span class=" font-bold">24</span>
+      <span class="bg-(--red) font-bold rounded-sm px-1">错</span>
       </div>
 
       
     <!-- 付费查看内容 -->
-    <div class="bg-(--bg-color) rounded-md my-2">
+    <div class="bg-(--bg-color) rounded-md my-4">
       <div v-if="!isPay" class="text-md md:text-2xl px-2 py-1 text-white rounded-md">
         <p class="font-bold">高手已加密，打赏即可查看资料</p>
         <div class="center flex-col my-2">
-            <button @click="showContent" class="animate-bounce font-bold! w-full md:w-[80%] bg-(--primary)! hover:bg-(--red)! py-1! rounded-md flex  justify-center items-center">
+            <button @click="showContent" class=" font-bold! w-full md:w-[80%] bg-(--primary)! hover:bg-(--red)! py-1! rounded-md flex  justify-center items-center">
                 <Icon name="gold"></Icon>
                 588 金币，已有5 人打赏。 立即打赏
             </button>
@@ -72,26 +76,33 @@
 
       <!-- 打赏查看 -->
       <div v-else class="text-md md:text-2xl px-2 py-1 text-white rounded-md my-2">
-        179期: 《寻彩百度》 🚗一①码中特🚗 【<span
-          class="bg-(--red) font-bold rounded-sm px-1"
-          >42</span
-        >】 开: <span class="text-(--blue) font-bold">未开奖</span> 
-
+        <span class="font-bold bg-(--blue) px-1 rounded-sm">179</span> 
+        期: 《寻彩百度》 
+        🚗
+        一①码中特
+        🚗 
+        【<span class="bg-(--red) font-bold rounded-sm px-1">42</span>】 
+        开: <span class="bg-(--blue) text-white font-bold rounded-sm px-1">未开奖</span> 
       </div>
     </div>
 
     </div>
 
-    <div class="desc">插入代码</div>
+    <!-- 文章底部代码 -->
+    <div class="desc" v-html="webConfigStore.webConfig.postFooterCode"></div>
   </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
+
 import Level from "@/components/Icon-level.vue";
 import Icon from "@/components/Icon.vue";
 
 import { useRouter } from "vue-router";
+
+import { useWebConfigStore } from '@/store/webconfig'
+const webConfigStore = useWebConfigStore()
 
 // 返回
 const router = useRouter();
@@ -105,6 +116,12 @@ const showContent = () => {
   isPay.value = true;
 };
 
+
+onMounted(() => {
+  if (!webConfigStore.webConfig) {
+    webConfigStore.getWebConfigInfo()
+  }
+})
 
 </script>
 

@@ -1,8 +1,7 @@
 // 封装axios
 
 import axios from 'axios'
-import { useUserStore } from '@/store/user'
-import router from '@/router'
+import { useUserStore } from '@/store/user.store'
 import { ElMessage } from 'element-plus'
 
 // 导出基准地址，原因：其他地方不是通过axios发请求的地方用上基准地址
@@ -11,15 +10,15 @@ export const baseURL = import.meta.env.VITE_API_BASE_URL
 const service = axios.create({
   baseURL,
   timeout: 5000
-})
+}) 
 // 添加请求拦截器
 service.interceptors.request.use(
   function (config) {
     // 在发送请求之前做些什么
-    // const userStore = useUserStore()
-    // if (userStore.token) {
-    //   config.headers.Authorization = userStore.token
-    // }
+    const userStore = useUserStore()
+    if (userStore.token) {
+      config.headers.Authorization = `Bearer ${userStore.token}`
+    }
     return config
   },
   function (error) {

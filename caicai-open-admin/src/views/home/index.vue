@@ -9,7 +9,7 @@
           <Icon name="用户量" width="32" height="32" />
           <div class="flex flex-col items-center justify-center">
             <p class="text-sm md:text-md">用户量</p>
-            <h4 class="text-md md:text-lg font-bold">78787</h4>
+            <h4 class="text-md md:text-lg font-bold">{{ userData.total }}</h4>
           </div>
         </div>
       </li>
@@ -20,7 +20,8 @@
           <Icon name="订单量" width="32" height="32" />
           <div class="flex flex-col items-center justify-center">
             <p class="text-sm md:text-md">API请求量</p>
-            <h4 class="text-md md:text-lg font-bold">78787</h4>
+            <h4 class="text-md md:text-lg font-bold">{{ accessData.total }}</h4>
+
           </div>
         </div>
       </li>
@@ -45,12 +46,93 @@ import { useRouter } from "vue-router";
 import Icon from "@/components/Icon.vue";
 import * as echarts from "echarts";
 import { onMounted } from "vue";
+import { getUsers } from "@/api/user";
+import { getWebAccessList } from "@/api/access";
+
+import { ElMessage } from "element-plus";
+
+
+const userData = ref({
+  total: 0,
+  data: []
+});
+const accessData = ref({
+  total: 0,
+  data: []  
+});
+
+
+// 获取用户
+const handleGetUsers = async () => {
+  try {
+    const res = await getUsers();
+    if (res.data.length > 0) {
+      userData.value = res;
+      // ElMessage.success('获取用户成功');
+    }
+  } catch (error) {
+    ElMessage.error('获取用户失败',error.message);
+  }
+}
+handleGetUsers()
+
+// 获取访问记录
+const handleGetAccess = async () => {
+  try {
+    const res = await getWebAccessList();
+    if (res.data.length > 0) {
+      accessData.value = res;
+      handleFilterArr(res.data);  //每天请求数量
+      handleFilterUrl(res.data);  //每个url的请求数量
+    }
+  } catch (error) {
+    ElMessage.error('获取访问记录失败',error.message);
+  }
+}
+handleGetAccess()
 
 const viewNumRef = ref(null);
 const areaNumRef = ref(null);
 let viewNumChart = null;
 let areaNumChart = null;
 
+let dateList = ref([]);
+let viewNumList = ref([]);
+const handleFilterArr = (arr) => { // 修正函数名拼写错误
+  // 重置数组
+  dateList.value = [];
+  viewNumList.value = [];
+  
+  // 若传入的数组为空，直接返回
+  if (!arr || arr.length === 0) {
+    // 即使没有数据，也初始化图表以显示空图表
+    if (viewNumChart) {
+      viewNumChart.setOption({
+        xAxis: { data: [] },
+        series: [{ data: [] }]
+      });
+    }
+    return;
+  }
+  arr.forEach(item => {
+    let date = new Date(item.requestTime).toISOString().split('T')[0];
+    if (!dateList.value.includes(date)) {
+      dateList.value.push(date);
+      viewNumList.value.push(1);
+    } else {
+      let index = dateList.value.indexOf(date);
+      viewNumList.value[index]++;
+    }
+  });
+  // 更新图表数据
+  if (viewNumChart) {
+    viewNumChart.setOption({
+      xAxis: { data: dateList.value },
+      series: [{ data: viewNumList.value }]
+    });
+    viewNumChart.resize();
+  }
+};
 const viewNumData = {
   title: {
     text: "每天请求量统计",
@@ -66,14 +148,14 @@ const viewNumData = {
   },
   xAxis: {
     type: "category",
-    data: ["7月25", "7月26", "7月27", "7月28", "7月29", "7月30", "7月31"],
+    data: dateList.value,
   },
   yAxis: {
     type: "value",
   },
   series: [
     {
-      data: [120, 200, 150, 80, 70, 110, 130],
+      data: viewNumList.value,
       type: "bar",
       itemStyle: {
         color: "#039e6d",
@@ -82,57 +164,64 @@ const viewNumData = {
   ],
 };
 
-// 模拟省份访问数据
-const areaData = [
-  { name: "北京", value: 12345 },
-  { name: "上海", value: 23456 },
-  { name: "广东", value: 34567 },
-  { name: "江苏", value: 19876 },
-  { name: "浙江", value: 18765 },
-  { name: "山东", value: 15678 },
-  { name: "河南", value: 14567 },
-  { name: "四川", value: 13456 },
-  { name: "湖北", value: 12345 },
-  { name: "福建", value: 11234 },
-  { name: "湖南", value: 10123 },
-  { name: "安徽", value: 9012 },
-  { name: "河北", value: 8901 },
-  { name: "陕西", value: 7890 },
-  { name: "江西", value: 6789 },
-  { name: "重庆", value: 5678 },
-  { name: "云南", value: 4567 },
-  { name: "辽宁", value: 3456 },
-  { name: "黑龙江", value: 2345 },
-  { name: "广西", value: 1234 },
-  { name: "山西", value: 1123 },
-  { name: "贵州", value: 1012 },
-  { name: "吉林", value: 901 },
-  { name: "内蒙古", value: 890 },
-  { name: "天津", value: 789 },
-  { name: "海南", value: 678 },
-  { name: "甘肃", value: 567 },
-  { name: "新疆", value: 456 },
-  { name: "青海", value: 345 },
-  { name: "宁夏", value: 234 },
-  { name: "西藏", value: 123 },
-  { name: "香港", value: 98 },
-  { name: "澳门", value: 76 },
-  { name: "台湾", value: 54 },
-];
 
-// 格式化数据，确保正确映射 name 和 value
-let formattedData = areaData.map((item) => {
-  return {
-    name: item.name,
-    value: item.value,
-  };
-});
+let userNameList = ref([]);
+let userNameNumList = ref([]);
+const handleFilterUrl = (arr) => { // 修正函数名拼写错误
+  // 重置数组
+  userNameList.value = [];
+  userNameNumList.value = [];
+  
+  // 若传入的数组为空，直接返回
+  if (!arr || arr.length === 0) {
+    // 即使没有数据，也初始化图表以显示空图表
+    if (areaNumChart) {
+      areaNumChart.setOption({
+        xAxis: { data: [] },
+        series: [{ data: [] }]
+      });
+    }
+    return;
+  }
+  arr.forEach(item => {
+    let name = item.username;
+    if (!userNameList.value.includes(name)) {
+      userNameList.value.push(name);
+      userNameNumList.value.push(1);
+    } else {
+      let index = userNameList.value.indexOf(name);
+      userNameNumList.value[index]++;
+    }
+  });
+  // 更新图表数据
+  if (areaNumChart) {
+    areaNumChart.setOption({
+      xAxis: { data: userNameList.value },
+      series: [{ data: userNameNumList.value }]
+    });
+    areaNumChart.resize();
+  }
+  // 按 value 降序排序
+  userNameNumList.value.sort((a, b) => a - b);
+  // 取前 10 个
+  userNameList.value = userNameList.value.slice(0, 10);
+  userNameNumList.value = userNameNumList.value.slice(0, 10);
+  // 反转数组
+  userNameList.value.reverse();
+  userNameNumList.value.reverse();
+  // 初始化图表
+  if (areaNumChart) {
+    areaNumChart.setOption({
+      yAxis: { data: userNameList.value },
+      series: [{ data: userNameNumList.value }]
+    });
+    areaNumChart.resize();
+  }
+  console.log(userNameList.value);
+  console.log(userNameNumList.value);
+}
 
-// 按 value 降序排序
-formattedData.sort((a, b) => b.value - a.value);
 
-// 根据排序后的结果提取城市名称用于 y 轴
-const cityNames = formattedData.map((item) => item.name);
 
 const areaNumData = {
   title: {
@@ -156,17 +245,19 @@ const areaNumData = {
   },
   yAxis: {
     type: "category",
-    data: cityNames,
+    data: userNameList.value,
+
     inverse: true,
-    name: "城市",
+    name: "用户",
+
     animationDuration: 300,
     animationDurationUpdate: 300,
   },
   series: [
     {
-      name: "地区访问量",
+      name: "用户请求量",
       type: "bar",
-      data: formattedData,
+      data: userNameNumList.value,
       label: {
         show: true,
         position: "right",

@@ -23,7 +23,7 @@ async function getByDate(ctx) {
       ctx.status = 400;
       return ctx.body = { error: '请提供开始日期和结束日期' };
     }
-    const result = await OpenCodeService.getOpenCodesByDate(startDate, endDate);
+    const result = await OpenCodeService.getOpenCodesByDate(startDate, endDate,page=1,pageSize=1000000);
     ctx.status = 200;
     ctx.body = result;
   } catch (error) {
@@ -50,6 +50,18 @@ async function getAll(ctx) {
   try {
     const { page = 1, pageSize = 10 } = ctx.query;
     const result = await OpenCodeService.getAllOpenCodes(Number(page), Number(pageSize));
+    ctx.status = 200;
+    ctx.body = result;
+  } catch (error) {
+    ctx.status = 500;
+    ctx.body = { error: error.message };
+  }
+}
+
+// 清空所有开奖记录
+async function clearAll(ctx) {
+  try {
+    const result = await OpenCodeService.clearAllOpenCodes();
     ctx.status = 200;
     ctx.body = result;
   } catch (error) {
@@ -88,11 +100,17 @@ async function del(ctx) {
   }
 }
 
-// 获取开奖数据 
-// 新澳门
-async function getOpenDataNewMacaoYear(ctx) {
+
+
+// 获取开奖数据（按年份）
+async function getOpenDataYear(ctx) {
   try {
-    const result = await OpenCodeService.getOpenDataNewMacaoYear();
+    const { openType, year = new Date().getFullYear() } = ctx.query;
+    if (!openType) {
+      ctx.status = 400;
+      return ctx.body = { error: '请提供openType参数' };
+    }
+    const result = await OpenCodeService.getOpenDataYear(openType, year);
     ctx.status = 200;
     ctx.body = result;
   } catch (error) {
@@ -101,24 +119,15 @@ async function getOpenDataNewMacaoYear(ctx) {
   }
 }
 
-// 获取开奖数据 
-// 澳门
-async function getOpenDataMacaoYear(ctx) {
+// 获取开奖数据（最新一期）
+async function getOpenDataNew(ctx) {
   try {
-    const result = await OpenCodeService.getOpenDataMacaoYear();
-    ctx.status = 200;
-    ctx.body = result;
-  } catch (error) {
-    ctx.status = 500;
-    ctx.body = { error: error.message };
-  }
-}
-
-// 获取开奖数据 
-// 香港
-async function getOpenDataHongKongYear(ctx) {
-  try {
-    const result = await OpenCodeService.getOpenDataHongKongYear();
+    const { openType } = ctx.query;
+    if (!openType) {
+      ctx.status = 400;
+      return ctx.body = { error: '请提供openType参数' };
+    }
+    const result = await OpenCodeService.getOpenDataNew(openType);
     ctx.status = 200;
     ctx.body = result;
   } catch (error) {
@@ -135,8 +144,9 @@ module.exports = {
   update,
   del,
   getAll,
+  clearAll,
   // 开奖数据 年
-  getOpenDataNewMacaoYear,
-  getOpenDataMacaoYear,
-  getOpenDataHongKongYear,
+  getOpenDataYear,
+  // 获取最新一期
+  getOpenDataNew
 };

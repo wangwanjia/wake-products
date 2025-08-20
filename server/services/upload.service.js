@@ -160,14 +160,24 @@ async function _uploadFile(file, ctx) {
     const relativePath = path
       .relative(UPLOAD_DIR, destinationPath)
       .replace(/\\/g, "/");
-    const fileUrl = `${ctx.protocol}://${ctx.host}/uploads/${relativePath}`;
+    const fileUrl = `${ctx.protocol}://${ctx.host}/${relativePath}`;
 
+    // return {
+    //   success: true,
+    //   message: "上传成功",
+    //   fileName,
+    //   fileUrl,
+    //   //   filePath: destinationPath
+    // };
     return {
-      message: "上传成功",
-      fileName,
-      fileUrl,
-      //   filePath: destinationPath
-    };
+    message: '上传成功',
+    errno: 0, // 注意：值是数字，不能是字符串
+    data: {
+        url: fileUrl,
+        alt: fileName,
+        href: fileUrl
+    }
+}
   } catch (error) {
     // 删除文件
     try {

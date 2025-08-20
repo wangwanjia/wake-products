@@ -20,7 +20,9 @@ async function uploadFilter(ctx, next) {
   if (isMultipart) {
     // 检查请求路径是否在允许的列表中
     const requestPath = ctx.path;
-
+    console.log(requestPath);
+    console.log(ALLOWED_UPLOAD_PATHS.includes(requestPath));
+    
     if (!ALLOWED_UPLOAD_PATHS.includes(requestPath)) {
       // 不是允许的上传接口，返回错误
 

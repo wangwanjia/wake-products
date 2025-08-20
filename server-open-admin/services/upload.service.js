@@ -160,7 +160,7 @@ async function _uploadFile(file, ctx) {
     const relativePath = path
       .relative(UPLOAD_DIR, destinationPath)
       .replace(/\\/g, "/");
-    const fileUrl = `${ctx.protocol}://${ctx.host}/uploads/${relativePath}`;
+    const fileUrl = `${ctx.protocol}://${ctx.host}/${relativePath}`;
 
     return {
       message: "上传成功",

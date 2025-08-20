@@ -58,7 +58,8 @@
         </el-dialog>
 
         <!-- 获取开奖数据 -->
-        <GetOpenCode :topOpenCodeDate="resultDataYear[0]?.openTime" />
+        <GetOpenCode :topOpenCodeDate="resultDataYear[0]?.openTime" :resultDataYear="resultDataYear" />
+
         <!-- 搜索 -->
         <div class="flex justify-between align-center my-4">
           <div class="search-box flex items-center">
@@ -102,7 +103,7 @@
           >
             <el-table-column type="selection" width="38" />
             <!-- <el-table-column prop="id" label="ID" width="58" /> -->
-            <el-table-column prop="openTimeCN" label="开奖时间" width="150" />
+            <el-table-column prop="openTimeCN" label="开奖时间" width="240" />
             <el-table-column prop="expect" label="期号" width="88">
               <template #default="scope">
                 <div class="font-bold text-(--red)">
@@ -165,7 +166,7 @@
                 </ul>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="180">
+            <el-table-column label="操作" width="180" fixed="right">
               <template #default="scope">
                 <el-button
                   class="text-white! border-0!"
@@ -211,7 +212,7 @@
             <el-button
               type="primary"
               class="bg-(--el-color-danger)! border-0!"
-              @click="addResult"
+              @click="handleClearOpenCode"
               >清空开奖表</el-button
             >
           </div>
@@ -230,7 +231,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch, reactive } from "vue";
+import { ref, onMounted, onUnmounted, watch, reactive,onActivated } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import * as echarts from "echarts";
 import { sxArr, codeArr, getCodeObjByNumbers } from "@/utils/result";
@@ -242,8 +243,9 @@ import {
   getOpenCodeByDate,
   deleteOpenCode,
   batchDeleteOpenCode,
+  clearOpenCode,
 } from "@/api/openCode";
-import { ElMessage } from "element-plus";
+import { ElMessage,ElMessageBox } from "element-plus";
 defineOptions({ name: "ResultsManageIndex" });
 
 const router = useRouter();
@@ -281,6 +283,8 @@ const handleCurrentChange = (val) => {
 
 // 打开码列表
 const handleGetOpenCodeList = async (params) => {
+  // 将函数挂载到window对象上，以便子页面调用
+  window.handleGetOpenCodeList = handleGetOpenCodeList;
   loading.value = true;
   try {
     let res = [];
@@ -296,6 +300,7 @@ const handleGetOpenCodeList = async (params) => {
     }
     resultData.value = handleData(res.data);
     total.value = res.total;
+    addChartDataPL();  //图表数据更新
   } catch (error) {
     console.error("获取打开码列表失败:", error);
   } finally {
@@ -336,7 +341,6 @@ const multipleTableRef = ref();
 const multipleSelection = ref([]);
 const handleSelectionChange = (val) => {
   multipleSelection.value = val;
-  console.log(multipleSelection.value);
 };
 
 // 删除对话框相关变量
@@ -399,6 +403,34 @@ const confirmBatchDelete = async () => {
   }
 };
 
+// 清空开奖表
+const handleClearOpenCode = async () => {
+  try {
+    loading.value = true;
+    // 添加一个简单的确认弹窗
+    const confirm = await ElMessageBox.confirm(
+      "确定清空开奖表吗？",
+      "确认清空",
+      {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      }
+    );
+    if (confirm === "confirm") {
+      await clearOpenCode();
+      ElMessage.success("清空开奖表成功");
+      // 重新获取数据列表
+      handleGetOpenCodeList();
+      addChartDataPL();
+    }
+  } catch (error) {
+    ElMessage.warning("清空开奖表失败");
+  } finally {
+    loading.value = false;
+  }
+};
+
 // 统计图表 按照年份展示
 const chartViewsRef = ref(null);
 const chartViews = ref(null);
@@ -410,6 +442,9 @@ const resultDataYear = ref([]);
 // 添加获取到的数据
 const addChartDataPL = async () => {
   try {
+    // 清空数据
+    chartData.value = Object.fromEntries(sxArr.map((item) => [item.sx, 0]));
+
     let params = {
       startDate: `${currentYear}-01-01 00:00:00`,
       endDate: `${currentYear}-12-31 23:59:59`,
@@ -420,6 +455,14 @@ const addChartDataPL = async () => {
       let sx = item.zodiac[6];
       chartData.value[sx] += 1;
     });
+
+    // 更新图表选项
+    chartOptions.value.title.text = `${currentYear}年十二生肖开奖频率`;
+    chartOptions.value.xAxis.data = Object.keys(chartData.value);
+    chartOptions.value.series[0].data = Object.values(chartData.value);
+    if (chartViews.value) {
+      chartViews.value.setOption(chartOptions.value);
+    }
   } catch (error) {
     console.error("获取年份开奖数据失败:", error);
   }
@@ -446,7 +489,6 @@ const chartOptions = ref({
   },
   series: [
     {
-      name: "注册量",
       type: "bar",
       itemStyle: {
         color: "#039e6d",
@@ -456,18 +498,6 @@ const chartOptions = ref({
   ],
 });
 
-// 监听 chartData 的变化，更新图表选项
-watch(
-  chartData,
-  () => {
-    chartOptions.value.xAxis.data = Object.keys(chartData.value);
-    chartOptions.value.series[0].data = Object.values(chartData.value);
-    if (chartViews.value) {
-      chartViews.value.setOption(chartOptions.value);
-    }
-  },
-  { deep: true }
-);
 
 // 编辑数据
 const handleEdit = (index, row) => {

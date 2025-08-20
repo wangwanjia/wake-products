@@ -16,7 +16,7 @@
         type="primary"
         class="ml-2"
         :disabled="loading"
-        @click="handleGetOpenCodeNew"
+        @click="handleGetOpenCodeNewData"
         >新澳门 获取当前最新一期</el-button
       >
     </div>
@@ -183,7 +183,8 @@
           </el-table-column>
           <el-table-column label="操作" width="180">
             <template #default="scope">
-              <el-button
+              <div class="w-full flex justify-end">
+                <el-button
                 class="text-white! border-0!"
                 size="small"
                 @click="handleEdit(scope.$index, scope.row)"
@@ -198,6 +199,7 @@
               >
                 删除
               </el-button>
+              </div>
             </template>
           </el-table-column>
         </el-table>
@@ -227,7 +229,7 @@
           <el-button
             type="primary"
             class="bg-(--el-color-danger)! border-0!"
-            @click="addResult"
+            @click="handleClearAllOpenCodes"
             >清空开奖表</el-button
           >
         </div>
@@ -253,8 +255,10 @@ import { formatDate } from "@/utils/index";
 import {
   getOpenCodeList,
   getOpenCodeByDate,
-  deleteOpenCode,
   batchDeleteOpenCode,
+  clearAllOpenCodes,
+  getOpenDataYear,
+  getOpenDataNew,
 } from "@/api/openCode";
 import { ElMessage } from "element-plus";
 
@@ -268,6 +272,7 @@ const props = defineProps({
   },
 });
 
+const openType = "newMacao";
 // 用到的数据变量
 const loading = ref(false); //加载状态
 const dateRange = ref(null); //查询时间范围
@@ -284,6 +289,8 @@ const handleCurrentChange = (val) => {
 
 // 打开码列表
 const handleGetOpenCodeList = async (params) => {
+  // 将函数挂载到window对象上，以便子页面调用
+  window['handleGetOpenCodeList'+openType] = handleGetOpenCodeList;
   loading.value = true;
   try {
     let res = [];
@@ -295,10 +302,14 @@ const handleGetOpenCodeList = async (params) => {
       res = await getOpenCodeList({
         page: page.value,
         pageSize: pageSize.value,
+        openType: openType,
       });
     }
+
     resultData.value = handleData(res.data);
     total.value = res.total;
+
+    addChartDataPL();   // 图表数据更新
   } catch (error) {
     console.error("获取打开码列表失败:", error);
   } finally {
@@ -331,6 +342,7 @@ const searchResult = () => {
       "yyyy-MM-dd HH:mm:ss"
     );
   }
+  params.openType = openType;
   handleGetOpenCodeList(params);
 };
 
@@ -359,7 +371,7 @@ const confirmDelete = async () => {
   if (currentDeleteResult.value) {
     loading.value = true;
     try {
-      await deleteOpenCode(currentDeleteResult.value.id);
+      await batchDeleteOpenCode(openType, [currentDeleteResult.value.id]);
       ElMessage.success("删除成功");
       // 重新获取数据列表
       handleGetOpenCodeList();
@@ -387,10 +399,11 @@ const confirmBatchDelete = async () => {
     loading.value = true;
     try {
       const idsToDelete = multipleSelection.value.map((item) => item.id);
-      await batchDeleteOpenCode(idsToDelete);
+      await batchDeleteOpenCode(openType, idsToDelete);
       ElMessage.success(`成功删除${multipleSelection.value.length}条数据`);
       // 重新获取数据列表
       handleGetOpenCodeList();
+      addChartDataPL();   // 图表数据更新
       multipleSelection.value = [];
     } catch (error) {
       console.error("批量删除失败:", error);
@@ -402,10 +415,91 @@ const confirmBatchDelete = async () => {
   }
 };
 
+// 清空开奖表
+const handleClearAllOpenCodes = async () => {
+  try {
+    loading.value = true;
+    await clearAllOpenCodes(openType);
+    ElMessage.success("清空开奖表成功");
+    // 重新获取数据列表
+    handleGetOpenCodeList();
+    addChartDataPL();   // 图表数据更新
+  } catch (error) {
+    console.error("清空开奖表失败:", error);
+    ElMessage.error("清空开奖表失败，请重试");
+  } finally {
+    loading.value = false;
+  }
+};
+
+const handleGetOpenCodeYear = async () => {
+  try {
+    // resultData数据不等于0，需要清空表格才能重新获取
+    if (resultData.value.length > 0) {
+      ElMessage.info("请先清空表格数据");
+      return
+    }
+    
+    loading.value = true;
+    let res = await getOpenDataYear(openType);
+    if(res.total > 0){  
+      handleGetOpenCodeList();   // 有数据就获取数据
+      addChartDataPL();   // 图表数据更新
+      ElMessage.success("获取条数"+res.total);
+    }else{
+      ElMessage.info("当前年份没有开奖数据");
+    }
+  } catch (error) {
+  } finally {
+    loading.value = false;
+  }
+}
+// 获取最新一期数据
+const handleGetOpenCodeNewData = async () => {
+  try {
+    loading.value = true;
+    // 每天九点之后才能获取最新一期数据 晚上九点半后才能获取最新一期数据
+    let now = new Date();
+    let hour = now.getHours();
+    let minute = now.getMinutes();
+    if (hour < 21 || (hour === 21 && minute < 30)) {
+      ElMessage.info("当前时间早于21点30分，不能获取最新数据");
+      return;
+    }
+    if(page.value > 1){
+      ElMessage.info("请先返回第一页,再点击获取");
+      return;
+    }
+    // // 获取今天的日期对比resultData最新的一期是否是存在
+    let todayStr = formatDate(now, "yyyy-MM-dd");
+    let latestResult = resultData.value[0];
+    let latestDate = latestResult ? formatDate(new Date(latestResult.openTime), "yyyy-MM-dd") : "";
+    // 对比日期
+    if (todayStr === latestDate) {
+      ElMessage.info("当前日期已获取最新数据");
+      return;
+    }
+
+    let res = await getOpenDataNew(openType);
+    
+    if(res.total > 0){
+      handleGetOpenCodeList();
+      addChartDataPL();   // 图表数据更新
+      ElMessage.success("获取条数"+res.total);
+    }else{
+      ElMessage.info("当前年份没有开奖数据");
+    }
+  } catch (error) {
+    console.error("获取最新一期数据失败:", error);
+  } finally {
+    loading.value = false;
+  }
+};
+
 // 统计图表 按照年份展示
 const chartNewMacaoRef = ref(null);
 const chartNewMacao = ref(null);
-const chartData = ref(Object.fromEntries(sxArr.map((item) => [item.sx, 1])));
+const chartData = ref(Object.fromEntries(sxArr.map((item) => [item.sx, 0])));
 // 获取当前的年份
 const currentYear = new Date().getFullYear();
 const resultDataYear = ref([]);
@@ -413,10 +507,15 @@ const resultDataYear = ref([]);
 // 添加获取到的数据
 const addChartDataPL = async () => {
   try {
+    // 清空数据
+    chartData.value = Object.fromEntries(sxArr.map((item) => [item.sx, 0]));
+
     let params = {
       startDate: `${currentYear}-01-01 00:00:00`,
       endDate: `${currentYear}-12-31 23:59:59`,
+      isChart: true,
     };
+    params.openType = openType;
     let res = await getOpenCodeByDate(params);
     resultDataYear.value = res.data;
     resultDataYear.value.forEach((item) => {
@@ -428,12 +527,21 @@ const addChartDataPL = async () => {
           chartData.value[sx] += 1;
         }
       }
+      // 图表数据更新
+      chartOptions.value.title.text = `${currentYear}年十二生肖开奖频率`;
+      chartOptions.value.xAxis.data = Object.keys(chartData.value);
+      chartOptions.value.series[0].data = Object.values(chartData.value);
+      if (chartNewMacao.value) {
+        chartNewMacao.value.setOption(chartOptions.value);
+      }
+
     });
   } catch (error) {
     console.error("获取年份开奖数据失败:", error);
   }
 };
-addChartDataPL();
+
+
 
 // 因为 chartOptions 依赖 chartData，使用 watch 监听 chartData 的变化并更新图表选项
 const chartOptions = ref({
@@ -466,22 +574,11 @@ const chartOptions = ref({
   ],
 });
 
-// 监听 chartData 的变化，更新图表选项
-watch(
-  chartData,
-  () => {
-    chartOptions.value.xAxis.data = Object.keys(chartData.value);
-    chartOptions.value.series[0].data = Object.values(chartData.value);
-    if (chartNewMacao.value) {
-      chartNewMacao.value.setOption(chartOptions.value);
-    }
-  },
-  { deep: true }
-);
 
 // 编辑数据
 const handleEdit = (index, row) => {
   const { codeObjArr, ...filteredRow } = row;
+  filteredRow.openType = openType;
   router.push({
     path: "/resultsManage/resultsEdit",
     query: filteredRow,
@@ -492,6 +589,9 @@ const handleEdit = (index, row) => {
 const addResult = () => {
   router.push({
     path: "/resultsManage/resultsAdd",
+    query:{
+      openType: openType,
+    }
   });
 };
 
@@ -499,7 +599,7 @@ const addResult = () => {
 // 将图表初始化逻辑从 onActivated 移至 onMounted，确保组件挂载时就初始化图表
 // 确保初始化代码正确
 onMounted(() => {
-  console.log("chartNewMacaoRef.value", chartNewMacaoRef.value);
+  addChartDataPL();
   chartNewMacao.value = echarts.init(chartNewMacaoRef.value);
   chartNewMacao.value.setOption(chartOptions.value);
   // 监听窗口大小变化，自动调整图表大小
@@ -512,7 +612,6 @@ watch(
   (newVal) => {
     if (newVal) {
       nextTick(() => {
-        console.log("chartNewMacao.value2222", chartNewMacao.value);
         chartNewMacao.value = echarts.init(chartNewMacaoRef.value);
         chartNewMacao.value.setOption(chartOptions.value);
         chartNewMacao.value.resize();

@@ -1,13 +1,20 @@
-import { createRouter, createWebHashHistory } from "vue-router";
-// import { useUserStore } from '@/store/modules/user'
-// import { getToken } from '@/utils/auth'
-// import { constantRoutes } from '@/router/constantRoutes'
+// 已在下方重新导入
+import { createRouter, createWebHashHistory } from 'vue-router'
+import { useUserStore } from '@/store/user.store'
+import { ElMessage } from 'element-plus'
 
 const routes = [
+  // 登录页面
+  {
+    path: '/login',
+    component: () => import('@/views/login/index.vue'),
+    name: 'Login',
+    meta: { title: '登录', hidden: true }
+  },
   {
     path: "/",
     component: () => import("@/layout/index.vue"),
-    
+    meta: { requiresAuth: true },
     children: [
       {
         path: "",
@@ -18,6 +25,11 @@ const routes = [
         path: "home",
         component: () => import("@/views/home/index.vue"),
         meta: { title: "首页" },
+      },
+      {
+        path: "access",
+        component: () => import("@/views/userAccess/index.vue"),
+        meta: { title: "访问记录" },
       },
       {
         path: "userManage",
@@ -79,6 +91,28 @@ const routes = [
 const router = createRouter({
   history: createWebHashHistory(),
   routes,
+});
+
+// 路由守卫
+router.beforeEach((to, from, next) => {
+  // 设置页面标题
+  document.title = to.meta.title ? `${to.meta.title} - 管理平台` : '管理平台';
+
+  // 检查是否需要认证
+  if (to.meta.requiresAuth) {
+    const userStore = useUserStore();
+    // 检查是否已登录
+    if (userStore.token) {
+      next();
+    } else {
+      // 未登录，重定向到登录页
+      ElMessage.warning('请先登录');
+      next({ path: '/login', query: { redirect: to.fullPath } });
+    }
+  } else {
+    // 不需要认证的页面
+    next();
+  }
 });
 
 export default router;

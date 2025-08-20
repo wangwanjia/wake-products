@@ -1,6 +1,26 @@
 const { Op } = require('sequelize');
 const db = require('../models');
 const OpenCode = db.OpenCode;
+const axios = require("axios");
+const { codeArr } = require("../utils/result")
+
+
+// 通过openType获取响应的url
+function getUrlByOpenType(openType, year) {
+  switch (openType) {
+    case "newMacao":
+      // API_NEWMACAO_URL调用.env
+      return process.env.API_NEWMACAO_URL + year;
+    case "macao":
+      // API_MACAO_URL调用.env
+      return process.env.API_MACAO_URL + year;
+    case "hongKong":
+      // API_HONGKONG_URL调用.env
+      return process.env.API_HONGKONG_URL;
+    default:
+      throw new Error("无效的openType类型: " + openType);
+  }
+}
 
 // 创建开奖记录
 async function createOpenCode(data) {
@@ -28,9 +48,6 @@ async function getOpenCodesByDate(startDate, endDate, page = 1, pageSize = 10) {
 
     return {
       total: count,
-      pages: Math.ceil(count / pageSize),
-      currentPage: page,
-      pageSize: pageSize,
       data: rows
     };
   } catch (error) {
@@ -87,6 +104,18 @@ async function getAllOpenCodes(page = 1, pageSize = 10) {
   }
 }
 
+// 清空所有开奖记录
+async function clearAllOpenCodes() {
+  try {
+    await OpenCode.destroy({
+      where: {}
+    });
+    return { message: '成功清空所有开奖记录' };
+  } catch (error) {
+    throw new Error(`清空开奖记录失败: ${error.message}`);
+  }
+}
+
 // 删除开奖记录（支持单个和批量删除）
 async function deleteOpenCode(ids) {
   try {
@@ -124,61 +153,94 @@ async function deleteOpenCode(ids) {
 }
 
 
-// 获取开奖数据 
-// 新澳门
-async function getOpenDataNewMacaoYear() {
+// 获取开奖数据（按年份）
+async function getOpenDataYear(openType) {
   try {
-    const result = await OpenCode.findAll({
-      where: {
-        openTime: {
-          [Op.gte]: new Date('2023-01-01')
+    let p = `?openType=${openType}&pageSize=100000`
+    let url = process.env.API_OPEN_URL + p;
+
+    const response = await axios.get(url);
+    let data = response.data.data;
+    let newData = [];
+    if (data.length > 0) {
+      // 批量创建实例并获取创建成功的数量，添加验证错误处理
+      newData = data.map(item => {
+        return {
+          expect: item.expect,
+          openTime: item.openTime,
+          openCode: item.openCode,
+          wave: item.wave,
+          zodiac: item.zodiac,
         }
+      })
+      try {
+        const createdCount = await OpenCode.bulkCreate(newData, { validate: true });
+        return { message: `成功添加 ${createdCount.length} 条数据`, total: createdCount.length };
+      } catch (error) {
+        if (error.name === 'SequelizeValidationError') {
+          console.error('批量创建时验证失败:', error.errors.map(e => e.message));
+        }
+        throw new Error(`查询开奖数据失败: ${error.message}`);
       }
-    });
-    return result;
+    } else {
+      return { message: '没有有效的数据可以添加', total: 0 };
+    }
   } catch (error) {
     throw new Error(`查询开奖数据失败: ${error.message}`);
   }
 }
 
-// 获取开奖数据 
-// 澳门
-async function getOpenDataMacaoYear() {
+// 获取开奖数据（最新一期）
+async function getOpenDataNew(openType) {
   try {
-    const result = await OpenCode.findAll({
+    // 判断当前日期是否存在
+    const currentDate = new Date();
+    const currentDateStr = currentDate.toISOString().split('T')[0];
+    const existingRecord = await OpenCode.findOne({
       where: {
-        openTime: {
-          [Op.gte]: new Date('2023-01-01')
-        }
+        openTime: currentDateStr
       }
     });
-    return result;
+    if (existingRecord) {
+      return { message: '当前日期数据已存在', total: 0 };
+    }
+
+    // 获取数据
+    let p = `?openType=${openType}&pageSize=1`
+    let url = process.env.API_OPEN_URL + p;
+    const response = await axios.get(url);
+    let data = response.data.data;
+    console.log(data);
+    
+    // 遍历数据，转换为模型实例
+    let instances = {};
+    if (data.length > 0) {
+      instances.expect = data[0].expect;
+      instances.openTime = data[0].openTime;
+      instances.openCode = data[0].openCode;
+      instances.wave = data[0].wave;
+      instances.zodiac = data[0].zodiac;
+    } else {
+      throw new Error(`查询开奖数据失败: 接口返回数据为空`);
+    }
+    // 批量创建实例并获取创建成功的数量
+    const createdCount = await OpenCode.bulkCreate([instances]).then(
+      (instances) => instances.length
+    );
+    return { message: `成功添加 ${createdCount} 条数据`, total: createdCount };
   } catch (error) {
     throw new Error(`查询开奖数据失败: ${error.message}`);
   }
 }
 
-// 获取开奖数据 
-// 香港
-async function getOpenDataHongKongYear() {
-  try {
-    const result = await OpenCode.findAll({
-      where: {
-        openTime: {
-          [Op.gte]: new Date('2023-01-01')
-        }
-      }
-    });
-    return result;
-  } catch (error) {
-    throw new Error(`查询开奖数据失败: ${error.message}`);
-  }
-}
 
 module.exports = {
   createOpenCode,
   getOpenCodesByDate,
   updateOpenCode,
   deleteOpenCode,
-  getAllOpenCodes
+  getAllOpenCodes,
+  clearAllOpenCodes,
+  getOpenDataYear,
+  getOpenDataNew,
 };

@@ -2,18 +2,18 @@
   <el-tabs v-model="activeNamePage" class="tabs-index" @tab-click="handleClick">
     <el-tab-pane name="index">
       <el-tabs
-        v-model="activeNameTag"
+        v-model="openCodeStore.activeNameType"
         class="tabs-get-open"
         @tab-click="handleClick"
       >
         <el-tab-pane label="新澳门" name="新澳门">
-          <GetOpenCodeNewMacao :isActive="activeNameTag == '新澳门'"></GetOpenCodeNewMacao>
+          <GetOpenCodeNewMacao :isActive="openCodeStore.activeNameType == '新澳门'"></GetOpenCodeNewMacao>
         </el-tab-pane>
         <el-tab-pane label="澳门" name="澳门">
-          <GetOpenCodeMacao :isActive="activeNameTag == '澳门'"></GetOpenCodeMacao>
+          <GetOpenCodeMacao :isActive="openCodeStore.activeNameType == '澳门'"></GetOpenCodeMacao>
         </el-tab-pane>
         <el-tab-pane label="香港" name="香港">
-          <GetOpenCodeHongKong :isActive="activeNameTag == '香港'"></GetOpenCodeHongKong>
+          <GetOpenCodeHongKong :isActive="openCodeStore.activeNameType == '香港'"></GetOpenCodeHongKong>
         </el-tab-pane>
       </el-tabs>
     </el-tab-pane>
@@ -30,6 +30,10 @@ import { useRouter, useRoute } from "vue-router";
 import GetOpenCodeNewMacao from "../components/GetOpenCodeNewMacao.vue";
 import GetOpenCodeMacao from "../components/GetOpenCodeMacao.vue";
 import GetOpenCodeHongKong from "../components/GetOpenCodeHongKong.vue";
+
+import { useOpenCodeStore } from "@/store/open.code.store";
+
+const openCodeStore = useOpenCodeStore();
 
 const router = useRouter();
 const route = useRoute();

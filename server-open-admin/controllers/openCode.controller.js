@@ -1,12 +1,14 @@
 const OpenCodeService = require('../services/openCode.service');
 
-
 // 创建开奖记录
 async function create(ctx) {
   try {
-    console.log(ctx.request.body);
-    
-    const result = await OpenCodeService.createOpenCode(ctx.request.body);
+    const { openType, ...data } = ctx.request.body;
+    if (!openType) {
+      ctx.status = 400;
+      return ctx.body = { error: '请提供openType参数' };
+    }
+    const result = await OpenCodeService.createOpenCode(openType, data);
     ctx.status = 201;
     ctx.body = result;
   } catch (error) {
@@ -18,12 +20,20 @@ async function create(ctx) {
 // 按日期查询开奖记录
 async function getByDate(ctx) {
   try {
-    const { startDate, endDate } = ctx.query;
+    let { openType, startDate, endDate, page = 1, pageSize = 10,isChart = false } = ctx.query;
+    if(isChart){
+      page = 1;
+      pageSize = 888;
+    }
+    if (!openType) {
+      ctx.status = 400;
+      return ctx.body = { error: '请提供openType参数' };
+    }
     if (!startDate || !endDate) {
       ctx.status = 400;
       return ctx.body = { error: '请提供开始日期和结束日期' };
     }
-    const result = await OpenCodeService.getOpenCodesByDate(startDate, endDate);
+    const result = await OpenCodeService.getOpenCodesByDate(openType, startDate, endDate, Number(page), Number(pageSize));
     ctx.status = 200;
     ctx.body = result;
   } catch (error) {
@@ -36,7 +46,12 @@ async function getByDate(ctx) {
 async function update(ctx) {
   try {
     const { id } = ctx.params;
-    const result = await OpenCodeService.updateOpenCode(id, ctx.request.body);
+    const { openType, ...data } = ctx.request.body;
+    if (!openType) {
+      ctx.status = 400;
+      return ctx.body = { error: '请提供openType参数' };
+    }
+    const result = await OpenCodeService.updateOpenCode(openType, id, data);
     ctx.status = 200;
     ctx.body = result;
   } catch (error) {
@@ -48,8 +63,12 @@ async function update(ctx) {
 // 获取全部开奖记录（分页）
 async function getAll(ctx) {
   try {
-    const { page = 1, pageSize = 10 } = ctx.query;
-    const result = await OpenCodeService.getAllOpenCodes(Number(page), Number(pageSize));
+    const { openType, page = 1, pageSize = 10 } = ctx.query;
+    if (!openType) {
+      ctx.status = 400;
+      return ctx.body = { error: '请提供openType参数' };
+    }
+    const result = await OpenCodeService.getAllOpenCodes(openType, Number(page), Number(pageSize));
     ctx.status = 200;
     ctx.body = result;
   } catch (error) {
@@ -62,24 +81,22 @@ async function getAll(ctx) {
 async function del(ctx) {
   try {
     // 从params获取单个id或从body获取ids数组
-    const { id } = ctx.params;
-    let ids;
+    const { openType, ids } = ctx.request.body;
+    let deleteIds;
     
-    if (id) {
-      // 单个删除
-      ids = id;
-    } else {
-      // 批量删除
-      ids = ctx.request.body.ids;
-      console.log(ctx.request.body);
-      
-      if (!ids || !Array.isArray(ids)) {
+    if (!openType) {
+      ctx.status = 400;
+      return ctx.body = { error: '请提供openType参数' };
+    }
+    
+    // 批量删除
+      deleteIds = ids;
+      if (!deleteIds || !Array.isArray(deleteIds)) {
         ctx.status = 400;
         return ctx.body = { error: '批量删除时必须提供ids数组' };
       }
-    }
     
-    const result = await OpenCodeService.deleteOpenCode(ids);
+    const result = await OpenCodeService.deleteOpenCode(openType, deleteIds);
     ctx.status = 200;
     ctx.body = result;
   } catch (error) {
@@ -88,11 +105,15 @@ async function del(ctx) {
   }
 }
 
-// 获取开奖数据 
-// 新澳门
-async function getOpenDataNewMacaoYear(ctx) {
+// 清空所有开奖记录
+async function clearAll(ctx) {
   try {
-    const result = await OpenCodeService.getOpenDataNewMacaoYear();
+    const { openType } = ctx.request.body;
+    if (!openType) {
+      ctx.status = 400;
+      return ctx.body = { error: '请提供openType参数' };
+    }
+    const result = await OpenCodeService.clearAllOpenCodes(openType);
     ctx.status = 200;
     ctx.body = result;
   } catch (error) {
@@ -101,11 +122,16 @@ async function getOpenDataNewMacaoYear(ctx) {
   }
 }
 
-// 获取开奖数据 
-// 澳门
-async function getOpenDataMacaoYear(ctx) {
+
+// 获取开奖数据（按年份）
+async function getOpenDataYear(ctx) {
   try {
-    const result = await OpenCodeService.getOpenDataMacaoYear();
+    const { openType, year = new Date().getFullYear() } = ctx.query;
+    if (!openType) {
+      ctx.status = 400;
+      return ctx.body = { error: '请提供openType参数' };
+    }
+    const result = await OpenCodeService.getOpenDataYear(openType, year);
     ctx.status = 200;
     ctx.body = result;
   } catch (error) {
@@ -114,11 +140,15 @@ async function getOpenDataMacaoYear(ctx) {
   }
 }
 
-// 获取开奖数据 
-// 香港
-async function getOpenDataHongKongYear(ctx) {
+// 获取开奖数据（最新一期）
+async function getOpenDataNew(ctx) {
   try {
-    const result = await OpenCodeService.getOpenDataHongKongYear();
+    const { openType } = ctx.query;
+    if (!openType) {
+      ctx.status = 400;
+      return ctx.body = { error: '请提供openType参数' };
+    }
+    const result = await OpenCodeService.getOpenDataNew(openType);
     ctx.status = 200;
     ctx.body = result;
   } catch (error) {
@@ -126,17 +156,22 @@ async function getOpenDataHongKongYear(ctx) {
     ctx.body = { error: error.message };
   }
 }
-
-
 
 module.exports = {
+  // 新增
   create,
+  // 按日期查询开奖记录
   getByDate,
+  // 修改
   update,
+  // 单个删除 批量删除
   del,
+  // 获取所有数据
   getAll,
+  // 清空所有开奖数据
+  clearAll,
   // 开奖数据 年
-  getOpenDataNewMacaoYear,
-  getOpenDataMacaoYear,
-  getOpenDataHongKongYear,
+  getOpenDataYear,  
+  // 开奖数据 最新一期
+  getOpenDataNew,
 };

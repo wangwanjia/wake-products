@@ -64,7 +64,7 @@ button {
 }
 button:hover {
   background-color: var(--bg-active);
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 button:focus,
 button:focus-visible {

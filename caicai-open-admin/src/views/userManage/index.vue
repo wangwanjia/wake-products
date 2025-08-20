@@ -58,21 +58,28 @@
         </el-dialog>
 
         <!-- 内容 -->
-        <h3 class="text-lg font-semibold mb-4 text-gray-800">用户管理</h3>
-        <div class="flex align-center my-4">
-          <el-input
-            placeholder="请输入用户名"
-            v-model="userId"
-            style="width: 200px"
-          />
-          <el-button
-            type="primary"
-            class="ml-2"
-            :disabled="loading"
-            :loading="loading"
-            @click="searchUser"
-            >查询</el-button
-          >
+        <div class="flex justify-between align-center my-4">
+          <div class="">
+            <el-input
+              placeholder="请输入用户名"
+              v-model="searchForm.keyword"
+              style="width: 200px"
+            />
+            <el-button
+              type="primary"
+              class="ml-2"
+              :disabled="loading"
+              :loading="loading"
+              @click="search"
+              >查询</el-button
+            >
+          </div>
+
+            <div class="">
+               <el-button type="primary" class="ml-2" @click="addUser"
+              >添加用户</el-button
+            >
+            </div>
         </div>
         <div class="overflow-x-auto">
           <el-table
@@ -87,24 +94,20 @@
               :selectable="selectable"
               width="38"
             />
-            <el-table-column prop="id" label="ID" width="58" />
-            <el-table-column prop="ip" label="IP" width="100" />
-            <el-table-column prop="city" label="角色" />
-            <el-table-column prop="city" label="账号" />
-            <el-table-column prop="device" label="密码" width="100" />
-            <el-table-column prop="userId" label="金币" />
-            <el-table-column prop="userId" label="历史金币" />
-            <el-table-column prop="userId" label="等级" />
-            <el-table-column prop="userId" label="订单ID" />
-            <el-table-column prop="userName" label="邮箱" />
-            <el-table-column prop="userName" label="手机号" />
-            <el-table-column prop="userName" label="头像" />
-            <el-table-column label="操作" width="180">
+            <el-table-column prop="uuid" label="UUID"></el-table-column>
+        <el-table-column prop="username" label="用户名" width="100"></el-table-column>
+        <el-table-column prop="forumUrl" label="论坛" width="180"></el-table-column>
+        <el-table-column prop="email" label="邮箱"></el-table-column>
+        <el-table-column prop="phone" label="手机号" ></el-table-column>
+        <el-table-column prop="expireTime" label="过期时间" ></el-table-column>
+        <el-table-column prop="createdAt" label="注册时间" ></el-table-column>
+            <el-table-column label="操作" width="130">
               <template #default="scope">
-                <el-button
+                <div class="w-full flex justify-end align-center">
+                  <el-button
                   class="text-white! border-0!"
                   size="small"
-                  @click="handleEdit(scope.$index, scope.row)"
+                  @click="handleEdit(scope.row)"
                 >
                   编辑
                 </el-button>
@@ -116,6 +119,7 @@
                 >
                   删除
                 </el-button>
+                </div>
               </template>
             </el-table-column>
           </el-table>
@@ -140,9 +144,7 @@
               :disabled="multipleSelection.length === 0"
               >批量删除</el-button
             >
-            <el-button type="primary" class="ml-2" @click="addUser"
-              >添加用户</el-button
-            >
+           
           </div>
         </div>
       </div>
@@ -161,8 +163,11 @@
 <script setup>
 defineOptions({ name: "UserManageIndex" });
 import { ref, onMounted, onUnmounted, watch, reactive } from "vue";
+import { ElMessage } from "element-plus";
 import { useRouter, useRoute } from "vue-router";
 import * as echarts from "echarts";
+import { getUsers, searchUserByUsername, batchDeleteUsers } from "@/api/user";
+
 
 const router = useRouter();
 const route = useRoute();
@@ -187,7 +192,7 @@ watch(
 // 分页变量
 const page = ref(1);
 const pageSize = ref(10);
-const total = ref(90);
+const total = ref(0);
 
 // 多选数据 批量处理
 const multipleTableRef = ref();
@@ -204,9 +209,82 @@ const currentDeleteUser = ref(null);
 // 批量删除对话框相关变量
 const batchDeleteDialogVisible = ref(false);
 
-// 用户访问记录相关变量
+// 搜索相关变量
 const loading = ref(false);
-const userId = ref("");
+const searchForm = ref({
+  keyword: ''
+});
+
+// 模拟用户数据
+const userData = ref([]);
+const handleGetUsers = async () => {
+  window.handleGetUsersList = handleGetUsers;
+  loading.value = true;
+  try{
+     const res = await getUsers({
+      page: page.value,
+      pageSize: pageSize.value
+    });
+    if (res.data.length > 0) {
+      // 处理时间格式
+      res.data.forEach(item => {
+        item.expireTime = new Date(item.expireTime).toLocaleString();
+        item.createdAt = new Date(item.createdAt).toLocaleString();
+      })
+      total.value = res.total;
+      userData.value = res.data;
+    }
+  } catch (error) {
+    console.error('获取用户列表失败:', error);
+    ElMessage.error('获取用户列表失败');
+  } finally {
+    loading.value = false;
+  }
+};
+
+
+// 搜索功能
+const search = () => {
+  loading.value = true;
+  setTimeout(async () => {
+    try {
+      if (searchForm.value.keyword === '') {
+        handleGetUsers();
+        return;
+      }
+      const res = await searchUserByUsername({
+        username: searchForm.value.keyword,
+      });
+      if (res.data) {
+        // 处理时间格式
+        res.data.forEach(item => {
+          item.expireTime = new Date(item.expireTime).toLocaleString();
+          item.createdAt = new Date(item.createdAt).toLocaleString();
+        })
+        userData.value = res.data;
+        total.value = res.data.length;
+      } else {
+        userData.value = [];
+        total.value = 0;
+      }
+    } catch (error) {
+      console.error('搜索用户失败:', error);
+      ElMessage.error('搜索用户失败');
+    } finally {
+      loading.value = false;
+    }
+  }, 500);
+};
+
+// 监听搜索框变化
+watch(
+  () => searchForm.value.keyword,
+  (newVal) => {
+    if (newVal === '') {
+      handleGetUsers();
+    }
+  }
+)
 
 // 处理删除操作
 const handleDelete = (user) => {
@@ -215,19 +293,27 @@ const handleDelete = (user) => {
 };
 
 // 确认删除
-const confirmDelete = () => {
+const confirmDelete = async () => {
   if (currentDeleteUser.value) {
-    // 这里可以添加实际的删除API调用
-    // 模拟删除操作
-    const index = userData.findIndex(
-      (item) => item.id === currentDeleteUser.value.id
-    );
-    if (index !== -1) {
-      userData.splice(index, 1);
-      console.log("删除用户:", currentDeleteUser.value);
+    try {
+      await batchDeleteUsers({ ids: [currentDeleteUser.value.id] });
+
+      // 删除成功后更新本地数据
+      const index = userData.value.findIndex(
+        (item) => item.id === currentDeleteUser.value.id
+      );
+      if (index !== -1) {
+        userData.value.splice(index, 1);
+        total.value--;
+      }
+      ElMessage.success('用户删除成功');
+    } catch (error) {
+      console.error('删除用户失败:', error);
+      ElMessage.error('删除用户失败');
+    } finally {
+      deleteDialogVisible.value = false;
+      currentDeleteUser.value = null;
     }
-    deleteDialogVisible.value = false;
-    currentDeleteUser.value = null;
   }
 };
 
@@ -239,74 +325,75 @@ const handleBatchDelete = () => {
 };
 
 // 确认批量删除
-const confirmBatchDelete = () => {
+const confirmBatchDelete = async () => {
   if (multipleSelection.value.length > 0) {
-    // 这里可以添加实际的批量删除API调用
-    // 模拟批量删除操作
-    const idsToDelete = multipleSelection.value.map((item) => item.id);
-    const newUserData = userData.filter(
-      (item) => !idsToDelete.includes(item.id)
-    );
-    userData.length = 0;
-    userData.push(...newUserData);
-    console.log("批量删除用户数:", multipleSelection.value.length);
-    multipleSelection.value = [];
-    batchDeleteDialogVisible.value = false;
+    try {
+      const idsToDelete = multipleSelection.value.map((item) => item.id);
+      await batchDeleteUsers({ ids: idsToDelete });
+      // 删除成功后更新本地数据
+      const newUserData = userData.value.filter(
+        (item) => !idsToDelete.includes(item.id)
+      );
+      userData.value = newUserData;
+      total.value = userData.value.length;
+      ElMessage.success(`成功删除${multipleSelection.value.length}个用户`);
+    } catch (error) {
+      console.error('批量删除用户失败:', error);
+      ElMessage.error('批量删除用户失败');
+    } finally {
+      multipleSelection.value = [];
+      batchDeleteDialogVisible.value = false;
+    }
   }
 };
 
-// 模拟获取用户访问记录
-const userData = [
-  {
-    id: 1,
-    time: new Date().toLocaleString(),
-    ip: "192.168.1.1",
-    city: "北京",
-    device: "11231",
-    userId: 1,
-    userName: "admin",
-  },
-  {
-    id: 2,
-    time: new Date(Date.now() - 60000).toLocaleString(),
-    ip: "192.168.1.2",
-    city: "上海",
-    device: "2131231",
-    userId: 2,
-    userName: "user1",
-  },
-  {
-    id: 3,
-    time: new Date(Date.now() - 120000).toLocaleString(),
-    ip: "192.168.1.3",
-    city: "广州",
-    device: "1244122",
-    userId: 3,
-    userName: "user2",
-  },
-  {
-    id: 4,
-    time: new Date(Date.now() - 180000).toLocaleString(),
-    ip: "192.168.1.4",
-    city: "广州",
-    device: "1231231",
-    userId: 4,
-    userName: "user3",
-  },
-  {
-    id: 5,
-    time: new Date(Date.now() - 240000).toLocaleString(),
-    ip: "192.168.1.5",
-    city: "广州",
-    device: "123121",
-    userId: 5,
-    userName: "user4",
-  },
-];
+
 
 // 统计图表
 const chartViewsRef = ref(null);
 const chartViews = ref(null);
+const chartDate = ref([]);  // 日期数组
+const chartRegister = ref([]);  // 注册量数组
+
+// 获取用户图表数据并按日期统计注册量
+const handleGetUsersChart = async () => {
+  const res = await getUsers({
+    page: 1,
+    pageSize: 1000
+  });
+  if (res.data.length > 0) {
+    // 按日期统计注册量
+    const registerCountMap = new Map();
+    res.data.forEach(item => {
+      // 假设每个用户数据里有注册时间字段，这里用 item.registerTime 示例，实际需根据接口返回调整
+      const registerDate = new Date(item.createdAt).toLocaleDateString();
+      registerCountMap.set(registerDate, (registerCountMap.get(registerDate) || 0) + 1);
+    });
+
+    // 清空旧数据
+    chartDate.value = [];
+    chartRegister.value = [];
+
+    // 将统计结果按日期排序并赋值给响应式变量
+    const sortedEntries = Array.from(registerCountMap.entries()).sort((a, b) => {
+      return new Date(a[0]) - new Date(b[0]);
+    });
+    console.log(sortedEntries);
+    sortedEntries.forEach(([date, count]) => {
+      chartDate.value.push(date);
+      chartRegister.value.push(count);
+    });
+
+    // 更新图表配置
+    chartOptions.value.xAxis.data = chartDate.value;
+    chartOptions.value.series[0].data = chartRegister.value;
+    if (chartViews.value) {
+      chartViews.value.setOption(chartOptions.value);
+    }
+  }
+}
+
+
 
 // 用户每天注册量
 const chartOptions = ref({
@@ -321,32 +408,8 @@ const chartOptions = ref({
   xAxis: {
     type: "category",
     name: "日期",
-    data: [
-      "7月1日",
-      "7月2日",
-      "7月3日",
-      "7月4日",
-      "7月5日",
-      "7月6日",
-      "7月7日",
-      "7月8日",
-      "7月9日",
-      "7月10日",
-      "7月11日",
-      "7月12日",
-      "7月13日",
-      "7月14日",
-      "7月15日",
-      "7月16日",
-      "7月17日",
-      "7月18日",
-      "7月19日",
-      "7月20日",
-      "7月21日",
-      "7月22日",
-      "7月23日",
-      "7月24日",
-    ],
+    data: chartDate.value,
+
   },
   yAxis: {
     type: "value",
@@ -358,20 +421,18 @@ const chartOptions = ref({
       itemStyle: {
         color: "#039e6d",
       },
-      data: [
-        100, 200, 150, 300, 250, 350, 400, 300, 200, 150, 100, 200, 150, 300,
-        250, 350, 400, 300, 200, 150, 100, 200, 150, 300,
-      ],
+      data: chartRegister.value,
+
     },
   ],
 });
 
-const handleEdit = (index, row) => {
-  // activeName.value = 'child'
+const handleEdit = (user) => {
   router.push({
     path: "/userManage/userEdit",
     query: {
-      id: row.id,
+      user: JSON.stringify(user),
+
     },
   });
 };
@@ -385,6 +446,10 @@ const addUser = () => {
 
 // 确保初始化代码正确
 onMounted(() => {
+  handleGetUsers();  //获取用户数据
+  handleGetUsersChart();  //获取用户图表数据
+
+
   chartViews.value = echarts.init(chartViewsRef.value);
   chartViews.value.setOption(chartOptions.value);
 
@@ -422,6 +487,7 @@ onMounted(() => {
 :deep(.el-pagination button.is-active) {
   color: var(--primary);
 }
+
 :deep(.el-checkbox__input.is-indeterminate .el-checkbox__inner) {
   background-color: var(--primary);
   color: white;

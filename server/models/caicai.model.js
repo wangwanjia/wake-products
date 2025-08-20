@@ -4,8 +4,8 @@ module.exports = (sequelize, DataTypes) => {
     name: {
       type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: '彩彩',
-      comment: '彩彩名称'
+      defaultValue: '彩彩论坛',
+      comment: '彩彩论坛'
     },
     logo: {
       type: DataTypes.STRING,
@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true,
       comment: '水印图片路径'
     },
-    bannerImage: {
+    bgImage: {
       type: DataTypes.STRING,
       allowNull: true,
       comment: '背景大图路径'
@@ -37,15 +37,15 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true,
       comment: '底部代码'
     },
-    articleHeaderCode: {
+    postHeaderCode: {
       type: DataTypes.TEXT,
       allowNull: true,
-      comment: '文章内头部代码'
+      comment: '文章头部代码'
     },
-    articleFooterCode: {
+    postFooterCode: {
       type: DataTypes.TEXT,
       allowNull: true,
-      comment: '文章内底部代码'
+      comment: '文章底部代码'
     }
   }, {
     timestamps: true,

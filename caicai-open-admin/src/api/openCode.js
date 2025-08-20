@@ -45,24 +45,51 @@ export const editOpenCode = (id, data) => {
   });
 };
 
-// 删除结果
-export const deleteOpenCode = (id) => {
-  return request({
-    url: `/openCode/del/${id}`,
-    method: "delete",
-  });
-};
 
 // 批量删除结果
-export const batchDeleteOpenCode = (ids) => {
+export const batchDeleteOpenCode = (openType, ids) => {
   return request({
     url: `/openCode/del`,
     method: "delete",
     data: {
+      openType,
       ids
     }
   });
 };
 
+// 清空数据
+export const clearAllOpenCodes = (openType) => {
+  return request({
+    url: `/openCode/clearAll`,
+    method: "delete",
+    data: {
+      openType
+    }
+  });
+};
+
+// 获取年份开奖数据
+export const getOpenDataYear = (openType, year) => {
+  return request({
+    url: `/openCode/getOpenDataYear`,
+    method: "get",
+    params: {
+      openType,
+      year
+    }
+  });
+};
+
+// 获取最新一期数据
+export const getOpenDataNew = (openType) => {
+  return request({
+    url: `/openCode/getOpenDataNew`,
+    method: "get",
+    params: {
+      openType
+    }
+  });
+};
 
 

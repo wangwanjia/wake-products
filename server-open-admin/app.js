@@ -9,6 +9,9 @@ const database = require('./config/database.js');
 const useRoutes = require('./routes/index.js');
 const {errorHandler} = require('./middlewares/errorHandler.js');
 const logger = require('./middlewares/logger.js');
+const authMiddleware = require('./middlewares/auth.js');
+
+
 
 require('dotenv').config();
 
@@ -21,13 +24,9 @@ async function startServer() {
     const db = require('./models/index.js');
     console.log('加载的模型:', Object.keys(db));
     // 初始化数据库连接
-    // 使用更安全的同步方式，避免因外键约束导致的删除表失败
-    // 在开发环境可以使用{ force: true }强制删除并重建所有表
-    // 但在生产环境应该使用迁移文件
     await database.sync({
-      force: true, // 不删除现有表
-      // alter: false, // 不修改现有表结构
-      logging: console.log // 打印同步日志，方便调试
+      // force: true, // 不删除现有表
+      alter: false, // 不修改现有表结构
     }); 
     console.log('数据库同步成功');
     
@@ -39,8 +38,11 @@ async function startServer() {
   // 中间件 
   // 错误处理 - 应该放在最前面
   app.use(errorHandler);
+
   // 允许跨域
   app.use(cors());
+
+
 
   // 上传过滤中间件 - 只允许特定接口上传文件
   const uploadFilter = require('./middlewares/uploadFilter');
@@ -66,11 +68,14 @@ async function startServer() {
     })
   );
   
-
   // 静态文件服务
   app.use(KoaStatic(path.join(process.cwd(), 'uploads')));
 
+
   app.use(logger); // ✅ 注册日志中间件
+
+  // 应用认证中间件
+  app.use(authMiddleware);
 
   // 路由注册
   useRoutes(app);

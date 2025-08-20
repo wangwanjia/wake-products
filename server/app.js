@@ -68,7 +68,13 @@ async function startServer() {
   
 
   // 静态文件服务
+  // 为uploads目录提供静态文件服务，支持访问子目录
+  // 修正路径，指向server目录下的uploads
   app.use(KoaStatic(path.join(process.cwd(), 'uploads')));
+
+  console.log('静态文件服务路径:', path.join(process.cwd(), 'uploads'));
+
+  
 
   app.use(logger); // ✅ 注册日志中间件
 

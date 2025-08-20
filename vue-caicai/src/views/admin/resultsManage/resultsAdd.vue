@@ -15,20 +15,49 @@
         ></el-date-picker>
       </el-form-item>
       <el-form-item label="期号" prop="expect">
-        <el-input v-model="resultsInfo.expect" placeholder="请输入期号1-366"></el-input>
+        <el-input
+          v-model="resultsInfo.expect"
+          placeholder="请输入期号1-366"
+        ></el-input>
       </el-form-item>
       <el-form-item label="开奖结果" prop="openCode">
-        <el-input
+        <el-checkbox-group
           v-model="resultsInfo.openCode"
-          placeholder="多个号码用逗号分隔:1,2,3,4,5,6,7"
-        ></el-input>
+          :min="0"
+          :max="7"
+          @change="handleChange"
+          class="m-[10px] grid grid-cols-12 gap-x-[20px] gap-y-[10px]"
+
+        >
+          <el-checkbox
+            v-for="item in codeArr"
+            :key="item.id"
+            :label="item.id"
+            :value="item.hm"
+          >
+            <div class="center flex-col">
+              <div
+                :class="`${item.bose}-code`"
+                class="code red-code center w-[24px] h-[24px] text-[12px] font-bold text-shadow-md shadow-xl/10"
+              >
+                {{ item.hm }}
+              </div>
+              <div class="sx-wx mt-1 text-xs">
+                <span class="">{{ item.sx }}</span>
+                <span class="text-black/30 mx-0.5">/</span>
+                <span>{{ item.mswux }}</span>
+              </div>
+            </div>
+          </el-checkbox>
+        </el-checkbox-group>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="addResults">添加</el-button>
+        <el-button type="primary" @click="resetForm">重置</el-button>
         <el-button
           class="bg-gray-300! border-0! text-gray-600!"
           @click="cancelAdd"
-          >取消</el-button
+          >返回</el-button
         >
       </el-form-item>
     </el-form>
@@ -36,13 +65,14 @@
 </template>
 
 <script setup>
-import { ref, reactive } from "vue";
-import { useRouter } from "vue-router";
+import { ref, reactive, watch } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import { addOpenCode } from "@/api/openCode";
 import { ElMessage } from "element-plus";
-import { getCodeObjByNumbers  } from "@/utils/result";
+import { codeArr, getCodeObjByNumbers } from "@/utils/result";
 
 const router = useRouter();
+const route = useRoute();
 const addForm = ref(null);
 const loading = ref(false);
 
@@ -75,18 +105,14 @@ const rules = reactive({
   openCode: [
     { required: true, message: "请输入开奖结果", trigger: "blur" },
     {
-      pattern: /^\d+(,\d+)*$/,
-      message: "开奖结果格式不正确，请使用逗号分隔多个号码",
-      trigger: "blur",
-    },
-    {
       validator: (rule, value, callback) => {
+        console.log(value);
         // 验证是否为空
         if (!value) {
           callback(new Error("开奖结果不能为空"));
           return;
         }
-        const numbers = value.split(",");
+        const numbers = value;
         // 验证是否为7个号码
         if (numbers.length !== 7) {
           callback(new Error("开奖结果必须为7个号码"));
@@ -113,8 +139,19 @@ const rules = reactive({
 const resultsInfo = ref({
   openTime: "",
   expect: "",
-  openCode: "",
+  openCode: [],
 });
+
+  // 重置表单
+  const resetForm = () => {
+    addForm.value.resetFields();
+  };
+
+const handleChange = (val) => {
+  console.log(val);
+  console.log(resultsInfo.value.openCode);
+};
+
 
 // 添加结果信息
 const addResults = async () => {
@@ -122,26 +159,29 @@ const addResults = async () => {
   try {
     await addForm.value.validate();
     loading.value = true;
-
     // 格式化日期为字符串
     const data = {
-        expect: resultsInfo.value.expect,
-        openTime: resultsInfo.value.openTime ? new Date(resultsInfo.value.openTime).toISOString() : '',
-        openCode: resultsInfo.value.openCode.split(','),
-      };
-      // 修改生肖和五行
-      data.wave = [];
-      data.zodiac = [];
-      const codeObj = getCodeObjByNumbers(data.openCode);
-      codeObj.forEach(item => {
-        data.wave.push(item.bose);
-        data.zodiac.push(item.sx);
-      })
+      expect: resultsInfo.value.expect,
+      openTime: resultsInfo.value.openTime
+        ? new Date(resultsInfo.value.openTime).toISOString()
+        : "",
+      openCode: resultsInfo.value.openCode,
+    };
+    // 修改生肖和五行
+    data.wave = [];
+    data.zodiac = [];
+    const codeObj = getCodeObjByNumbers(data.openCode);
+    codeObj.forEach((item) => {
+      data.wave.push(item.bose);
+      data.zodiac.push(item.sx);
+    });
 
     await addOpenCode(data);
     ElMessage.success("添加成功");
     // 返回结果管理页面
     router.push("/admin/resultsManage");
+        // 重新请求数据
+    window.handleGetOpenCodeList();
   } catch (error) {
     console.error("添加失败:", error);
     ElMessage.error("添加失败，请重试");
@@ -163,5 +203,13 @@ const cancelAdd = () => {
 .el-button--primary {
   background-color: var(--primary);
   border-color: var(--primary);
+}
+
+:deep(.el-checkbox){
+  height: auto;
+  margin-bottom: 10px;
+}
+:deep(.el-checkbox__input.is-checked+.el-checkbox__label){
+  color: var(--primary);
 }
 </style>

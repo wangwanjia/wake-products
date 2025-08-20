@@ -16,11 +16,39 @@
           <el-input v-model="resultsInfo.expect"></el-input>
         </el-form-item>
         <el-form-item label="开奖结果" prop="openCode">
-          <el-input v-model="resultsInfo.openCode" placeholder="多个号码用逗号分隔:1,2,3,4,5,6,7"></el-input>
+          <el-checkbox-group
+          v-model="resultsInfo.openCode"
+          :min="0"
+          :max="7"
+          @change="handleChange"
+          class="m-[10px] grid grid-cols-12 gap-x-[20px] gap-y-[10px]"
+        >
+          <el-checkbox
+            v-for="item in codeArr"
+            :key="item.id"
+            :label="item.id"
+            :value="item.hm"
+          >
+            <div class="center flex-col">
+              <div
+                :class="`${item.bose}-code`"
+                class="code red-code center w-[24px] h-[24px] text-[12px] font-bold text-shadow-md shadow-xl/10"
+              >
+                {{ item.hm }}
+              </div>
+              <div class="sx-wx mt-1 text-xs">
+                <span class="">{{ item.sx }}</span>
+                <span class="text-black/30 mx-0.5">/</span>
+                <span>{{ item.mswux }}</span>
+              </div>
+            </div>
+          </el-checkbox>
+        </el-checkbox-group>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="saveResults">保存</el-button>
-          <el-button class="bg-gray-300! border-0! text-gray-600!" @click="cancelEdit">取消</el-button>
+          <el-button type="primary" @click="resetForm">重置</el-button>
+          <el-button class="bg-gray-300! border-0! text-gray-600!" @click="cancelEdit">返回</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -31,7 +59,7 @@
   import { useRouter, useRoute } from 'vue-router';
   import { editOpenCode } from '@/api/openCode';
   import { ElMessage } from 'element-plus';
-  import { getCodeObjByNumbers  } from "@/utils/result";
+  import { codeArr,getCodeObjByNumbers  } from "@/utils/result";
 
   const router = useRouter();
   const route = useRoute();
@@ -66,28 +94,34 @@
     openCode: [
       { required: true, message: '请输入开奖结果', trigger: 'blur' },
       { pattern: /^\d+(,\d+)*$/, message: '开奖结果格式不正确，请使用逗号分隔多个号码', trigger: 'blur' },
-      { validator: (rule, value, callback) => {
+      {
+      validator: (rule, value, callback) => {
+        console.log(value);
         // 验证是否为空
         if (!value) {
-          callback(new Error('开奖结果不能为空'));
+          callback(new Error("开奖结果不能为空"));
           return;
         }
-        const numbers = value.split(',');
+        const numbers = value;
         // 验证是否为7个号码
         if (numbers.length !== 7) {
-          callback(new Error('开奖结果必须为7个号码'));
+          callback(new Error("开奖结果必须为7个号码"));
           return;
         }
         // 验证每个号码是否在1到49之间
-        if (numbers.some(num => {
-          const numInt = parseInt(num, 10);
-          return isNaN(numInt) || numInt < 1 || numInt > 49;
-        })) {
-          callback(new Error('开奖结果必须在1到49之间且为有效数字'));
+        if (
+          numbers.some((num) => {
+            const numInt = parseInt(num, 10);
+            return isNaN(numInt) || numInt < 1 || numInt > 49;
+          })
+        ) {
+          callback(new Error("开奖结果必须在1到49之间且为有效数字"));
           return;
         }
         callback();
-      }, trigger: 'blur' }
+      },
+      trigger: "blur",
+    },
     ]
   });
 
@@ -99,17 +133,26 @@
     openCode: []
   });
 
+  // 重置表单
+  const resetForm = () => {
+    editForm.value.resetFields();
+  };
+
   // 页面加载时获取结果信息
   onMounted(() => {
     if (route.query.id) {
       // 从路由参数中获取传递的结果数据
       const resultData = route.query || {};
+      
+      console.log(resultData);
       if (Object.keys(resultData).length > 0) {
         // 格式化日期时间
         if (resultData.openTime) {
+          
           resultData.openTime = new Date(resultData.openTime);
-          resultData.openCode = resultData.openCode.join(',');
+          resultData.openCode = resultData.openCode.map(item => item.toString().padStart(2, '0'));
         }
+        
         resultsInfo.value = { ...resultData };
       }
     }
@@ -128,7 +171,7 @@
       const data = {
         expect: resultsInfo.value.expect,
         openTime: resultsInfo.value.openTime ? new Date(resultsInfo.value.openTime).toISOString() : '',
-        openCode: resultsInfo.value.openCode.split(','),
+        openCode: resultsInfo.value.openCode,
       };
       // 修改生肖和五行
       data.wave = [];
@@ -138,11 +181,13 @@
         data.wave.push(item.bose);
         data.zodiac.push(item.sx);
       })
-      
+
       await editOpenCode(resultsInfo.value.id, data);
       ElMessage.success('编辑成功');
       // 返回结果管理页面
       router.push('/admin/resultsManage');
+
+      window.handleGetOpenCodeList();
     } catch (error) {
       console.error('编辑失败:', error);
       ElMessage.error('编辑失败，请重试');
@@ -165,4 +210,12 @@
     background-color: var(--primary);
     border-color: var(--primary);
   }
+
+  :deep(.el-checkbox){
+  height: auto;
+  margin-bottom: 10px;
+}
+:deep(.el-checkbox__input.is-checked+.el-checkbox__label){
+  color: var(--primary);
+}
   </style>

@@ -9,7 +9,7 @@
           <Icon name="用户量" width="32" height="32" />
           <div class="flex flex-col items-center justify-center">
             <p class="text-sm md:text-md">用户量</p>
-            <h4 class="text-md md:text-lg font-bold">78787</h4>
+            <h4 class="text-md md:text-lg font-bold">{{userNumRes.total}}</h4>
           </div>
         </div>
       </li>
@@ -20,7 +20,7 @@
           <Icon name="订单量" width="32" height="32" />
           <div class="flex flex-col items-center justify-center">
             <p class="text-sm md:text-md">订单量</p>
-            <h4 class="text-md md:text-lg font-bold">78787</h4>
+            <h4 class="text-md md:text-lg font-bold">{{orderNumRes.data.totalOrders}}</h4>
           </div>
         </div>
       </li>
@@ -32,7 +32,7 @@
           <Icon name="总金额" width="32" height="32" />
           <div class="flex flex-col items-center justify-center">
             <p class="text-sm md:text-md">订单总金额</p>
-            <h4 class="text-md md:text-lg font-bold">78787</h4>
+            <h4 class="text-md md:text-lg font-bold">{{orderNumRes.data.totalAmount}}</h4>
           </div>
         </div>
       </li>
@@ -61,20 +61,21 @@
           <Icon name="设备" width="32" height="32" />
           <div class="flex flex-col items-center justify-center">
             <p class="text-sm md:text-md">访问量</p>
-            <h4 class="text-md md:text-lg font-bold">78787</h4>
+            <h4 class="text-md md:text-lg font-bold">{{deviceNumRes.data.totalViews}}</h4>
+
           </div>
           <div class="flex flex-col items-center justify-center gap-2">
             <div class="center text-xs gap-1">
               <Icon name="电脑" width="18" height="18" />
-              <span>12323</span>
+              <span>{{deviceNumRes.data.desktop}}</span>
             </div>
             <div class="center text-xs gap-1">
               <Icon name="手机" width="18" height="18" />
-              <span>12323</span>
+              <span>{{deviceNumRes.data.mobile}}</span>
             </div>
             <div class="center text-xs gap-1">
-              <Icon name="未知" width="18" height="18" />
-              <span>12323</span>
+              <Icon name="平板" width="18" height="18" />
+              <span>{{deviceNumRes.data.tablet}}</span>
             </div>
           </div>
         </div>
@@ -99,13 +100,91 @@ import { useRouter } from "vue-router";
 import Icon from "@/components/Icon.vue";
 import * as echarts from "echarts";
 import { onMounted } from "vue";
+import {getUsers} from "@/api/user";
+import {getOrderStats} from "@/api/order";
+import {getDeviceTypeStats,getMonthlyViewStats,getViewLocationStats} from "@/api/views";
+
+
+// 获取数据
+const userNumRes = ref({
+  total: 0,
+})
+const orderNumRes = ref({
+  data:{
+    totalOrders: 0,
+    totalAmount: 0,
+  }
+})
+const deviceNumRes = ref({
+  data:{
+    desktop: 0,
+    mobile: 0,
+    tablet: 0,
+    totalViews: 0,
+  }
+})
+const monthlyViewRes = ref({
+  data:{
+    xAxis: [],
+    yAxis: [],
+  }
+})
+
+const areaNumRes = ref({
+  data:{
+    xAxis: [],
+    yAxis: [],
+  }
+})
+
+
+
+const getStats = async () => {
+  try {
+    userNumRes.value = await getUsers();
+    orderNumRes.value = await getOrderStats();
+    deviceNumRes.value = await getDeviceTypeStats();
+    let deviceData = deviceNumRes.value.data;
+    deviceNumRes.value.data.totalViews =  Number(deviceData.desktop) + Number(deviceData.mobile) + Number(deviceData.tablet);
+
+  } catch (error) {
+    console.log(error);
+  }
+}
+getStats();
+
 
 const viewNumRef = ref(null);
 const areaNumRef = ref(null);
-let viewNumChart = null;
-let areaNumChart = null;
+let viewNumChart = ref(null);
+let areaNumChart = ref(null);
 
-const viewNumData = {
+// 两个月访问访问数据
+const handleGetMonthlyViewStats = async () => {
+  try {
+    let res = await getMonthlyViewStats();
+
+    if(res.success == true){
+      monthlyViewRes.value = res;
+    // 初始化图表
+    // 更新图表选项
+      viewNumData.value.xAxis.data = monthlyViewRes.value.data.xAxis;
+      viewNumData.value.series[0].data = monthlyViewRes.value.data.yAxis; 
+      if (viewNumChart.value) {
+        viewNumChart.value.setOption(viewNumData.value);
+      }
+    }else{
+      ElMessage.error(res.error);
+    }
+  } catch (error) {
+    console.log(error);
+  }
+}
+handleGetMonthlyViewStats();
+
+
+const viewNumData = ref(
+  {
   title: {
     text: "访问量统计",
     left: "center",
@@ -120,75 +199,56 @@ const viewNumData = {
   },
   xAxis: {
     type: "category",
-    data: ["7月25", "7月26", "7月27", "7月28", "7月29", "7月30", "7月31"],
+    data: monthlyViewRes.value.data.xAxis,
+
   },
   yAxis: {
     type: "value",
   },
   series: [
     {
-      data: [120, 200, 150, 80, 70, 110, 130],
+      data: monthlyViewRes.value.data.yAxis,
       type: "bar",
       itemStyle: {
         color: "#039e6d",
       },
     },
   ],
-};
+}
+)
 
-// 模拟省份访问数据
-const areaData = [
-  { name: "北京", value: 12345 },
-  { name: "上海", value: 23456 },
-  { name: "广东", value: 34567 },
-  { name: "江苏", value: 19876 },
-  { name: "浙江", value: 18765 },
-  { name: "山东", value: 15678 },
-  { name: "河南", value: 14567 },
-  { name: "四川", value: 13456 },
-  { name: "湖北", value: 12345 },
-  { name: "福建", value: 11234 },
-  { name: "湖南", value: 10123 },
-  { name: "安徽", value: 9012 },
-  { name: "河北", value: 8901 },
-  { name: "陕西", value: 7890 },
-  { name: "江西", value: 6789 },
-  { name: "重庆", value: 5678 },
-  { name: "云南", value: 4567 },
-  { name: "辽宁", value: 3456 },
-  { name: "黑龙江", value: 2345 },
-  { name: "广西", value: 1234 },
-  { name: "山西", value: 1123 },
-  { name: "贵州", value: 1012 },
-  { name: "吉林", value: 901 },
-  { name: "内蒙古", value: 890 },
-  { name: "天津", value: 789 },
-  { name: "海南", value: 678 },
-  { name: "甘肃", value: 567 },
-  { name: "新疆", value: 456 },
-  { name: "青海", value: 345 },
-  { name: "宁夏", value: 234 },
-  { name: "西藏", value: 123 },
-  { name: "香港", value: 98 },
-  { name: "澳门", value: 76 },
-  { name: "台湾", value: 54 },
-];
+// 获取地区数据
+const handleGetAreaNumStats = async () => {
+  try {
+    let res = await getViewLocationStats();
 
-// 格式化数据，确保正确映射 name 和 value
-let formattedData = areaData.map((item) => {
-  return {
-    name: item.name,
-    value: item.value,
-  };
-});
+    if(res.success == true){
+      areaNumRes.value = res;
+      // 将城市和访问量数据组合成数组
+      const combinedData = areaNumRes.value.data.xAxis.map((city, index) => ({
+        city,
+        value: areaNumRes.value.data.yAxis[index]
+      }));
 
-// 按 value 降序排序
-formattedData.sort((a, b) => b.value - a.value);
+      // 按照访问量降序排序
+      combinedData.sort((a, b) => b.value - a.value);
 
-// 根据排序后的结果提取城市名称用于 y 轴
-const cityNames = formattedData.map((item) => item.name);
+      // 更新图表数据
+      areaNumData.value.yAxis.data = combinedData.map(item => item.city);
+      areaNumData.value.series[0].data = combinedData.map(item => item.value);
+      if (areaNumChart.value) {
+        areaNumChart.value.setOption(areaNumData.value);
+      }
+    }else{
+      ElMessage.error(res.error);
+    }
+  } catch (error) {
+    console.log(error);
+  }
+}
+handleGetAreaNumStats();
 
-const areaNumData = {
+const areaNumData = ref({
   title: {
     text: "地区访问量",
     left: "center",
@@ -210,7 +270,7 @@ const areaNumData = {
   },
   yAxis: {
     type: "category",
-    data: cityNames,
+    data: [], // 初始化为空数组，后续通过接口数据更新
     inverse: true,
     name: "城市",
     animationDuration: 300,
@@ -220,7 +280,7 @@ const areaNumData = {
     {
       name: "地区访问量",
       type: "bar",
-      data: formattedData,
+      data: [], // 初始化为空数组，后续通过接口数据更新
       label: {
         show: true,
         position: "right",
@@ -231,22 +291,23 @@ const areaNumData = {
       },
     },
   ],
-};
-
+});
 // 确保初始化代码正确
 onMounted(() => {
   // 初始化访问量图表
-  viewNumChart = echarts.init(viewNumRef.value);
-  viewNumChart.setOption(viewNumData);
+  viewNumChart.value = echarts.init(viewNumRef.value);
+  viewNumChart.value.setOption(viewNumData.value);
+
 
   // 初始化地区访问图表
-  areaNumChart = echarts.init(areaNumRef.value);
-  areaNumChart.setOption(areaNumData);
+  areaNumChart.value = echarts.init(areaNumRef.value);
+  areaNumChart.value.setOption(areaNumData.value);
 
+  
   // 自适应
   window.addEventListener("resize", () => {
-    viewNumChart.resize();
-    areaNumChart.resize();
+    viewNumChart.value.resize();
+    areaNumChart.value.resize();
   });
 });
 </script>

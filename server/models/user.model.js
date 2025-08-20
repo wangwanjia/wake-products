@@ -26,13 +26,12 @@ module.exports = (sequelize, DataTypes) => {
     },
     email: {
       type: DataTypes.STRING,
-      unique: true,
       validate: { isEmail: true },
       comment: '邮箱'
     },
     avatar: {
       type: DataTypes.STRING,
-      defaultValue: 'default-avatar.jpg',
+      defaultValue: '0',
       comment: '头像'
     },
     // 管理员

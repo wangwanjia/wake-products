@@ -64,5 +64,48 @@ export const batchDeleteOpenCode = (ids) => {
   });
 };
 
+// 清空所有记录
+export const clearOpenCode = () => {
+  return request({
+    url: `/openCode/clearAll`,
+    method: "delete",
+  });
+};
+
+/**
+ * 
+ * @param {
+ *  openType: string,
+ * } data 
+ * @returns 
+ */
+export const getOpenCodeYear = (openType) => {
+  return request({
+    url: "/openCode/getOpenDataYear",
+    method: "get",
+    params: {
+      openType,
+    }
+  });
+};
+
+/**
+ *   获取最新一期记录
+ * @param {
+ *  openType: string,
+ * } data 
+ * @returns 
+ */
+export const getOpenCodeNew = (openType) => {
+  return request({
+    url: `/openCode/getOpenDataNew`,
+    method: "get",
+    params: {
+      openType
+    }
+  });
+};
+
+
 
 

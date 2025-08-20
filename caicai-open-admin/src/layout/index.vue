@@ -75,6 +75,11 @@ const menuRoutes = [
     icon: 'home',
   },
   {
+    path: '/access',
+    name: '访问记录',
+    icon: '访问记录',
+  },
+  {
     path: '/userManage',
     name: '用户管理',
     icon: '用户管理',

@@ -12,7 +12,7 @@
     </h1>
 
     <div class="w-full max-w-md mx-auto">
-      <el-form :model="form" :rules="rules" ref="formRef" label-width="80px">
+      <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
         <el-form-item label="用户名：" prop="username">
           <el-input v-model="username" placeholder="请输入用户名"></el-input>
         </el-form-item>
@@ -57,10 +57,12 @@ const code = ref("");
 const captchaCode = ref("");
 const router = useRouter();
 
-
 const form = ref({
   username: "",
   password: "",
+  confirmPassword: "",
+  phone: "",
+  email: "",
   code: "",
 });
 
@@ -68,8 +70,11 @@ const rules = ref({
   username: [{ required: true, message: "请输入用户名", trigger: "blur" }],
   password: [{ required: true, message: "请输入密码", trigger: "blur" }],
   confirmPassword: [{ required: true, message: "请确认密码", trigger: "blur" }],
+  phone: [{ required: false, message: "请输入手机号", trigger: "blur" }],
+  email: [{ required: false, message: "请输入邮箱", trigger: "blur" }],
   code: [{ required: true, message: "请输入验证码", trigger: "blur" }],
 });
+
 
 
 

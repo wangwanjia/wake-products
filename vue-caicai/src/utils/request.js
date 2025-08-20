@@ -3,7 +3,7 @@
 import axios from 'axios'
 import { useUserStore } from '@/store/user'
 import router from '@/router'
-import { ElMessage } from 'element-plus'
+
 
 // 导出基准地址，原因：其他地方不是通过axios发请求的地方用上基准地址
 export const baseURL = import.meta.env.VITE_API_BASE_URL
@@ -34,7 +34,6 @@ service.interceptors.response.use(
     // 2xx 范围内的状态码都会触发该函数。
     // 对响应数据做点什么
     if (response.status >= 400) {
-      ElMessage.error(response.statusText)
       return Promise.reject(response.data)
     }
     return response.data

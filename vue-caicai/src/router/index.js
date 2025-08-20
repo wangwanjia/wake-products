@@ -58,6 +58,13 @@ const routes = [
         path: "userViews",
         component: () => import("@/views/admin/userViews/index.vue"),
         meta: { title: "访问记录" },
+        children: [
+          {
+            path: "viewAdd",
+            component: () => import("@/views/admin/userViews/viewAdd.vue"),
+            meta: { title: "访问记录添加" },
+          },
+        ]
       },
 
       {
@@ -100,11 +107,11 @@ const routes = [
         component: () => import("@/views/admin/orderManage/index.vue"),
         meta: { title: "订单管理" },
         children: [
-          {
-            path: "orderEdit",
-            component: () => import("@/views/admin/orderManage/orderEdit.vue"),
-            meta: { title: "订单编辑" },
-          },
+          // {
+          //   path: "orderEdit",
+          //   component: () => import("@/views/admin/orderManage/orderEdit.vue"),
+          //   meta: { title: "订单编辑" },
+          // },
           {
             path: "orderAdd",
             component: () => import("@/views/admin/orderManage/orderAdd.vue"),

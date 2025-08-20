@@ -3,8 +3,8 @@
     <!-- 头部插入内容 -->
     <div
       class="fade-in head-insert w-full border-1 border-solid border-(--primary) my-1"
+      v-html="webConfigStore.webConfig.headerCode"
     >
-      头部插入内容
     </div>
 
     <!-- 用户信息 -->
@@ -20,13 +20,23 @@
     </div>
 
     <!-- 底部插入的内容 -->
-    <div class="footer-insert">底部插入的内容</div>
+    <div class="footer-insert" v-html="webConfigStore.webConfig.footerCode"></div>
+
   </div>
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
+
 import PostList from "../components/PostList.vue";
 import IsLogin from "../components/IsLogin.vue";
+
+import { useWebConfigStore } from '@/store/webconfig'
+const webConfigStore = useWebConfigStore()
+onMounted(() => {
+  webConfigStore.getWebConfigInfo()
+})
+
 
 </script>
 

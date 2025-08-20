@@ -1,94 +1,51 @@
 
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define('User', {
-    // 用户IP
-    ip: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      comment: '用户IP'
-    },
-    account: {
-      type: DataTypes.STRING,
-      validate: {
-        len: [4,30]
-      },
-      unique: true,
+    // uuid 字段
+    uuid: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       allowNull: false,
-      comment: '账号'
+      unique: true
     },
+    // 用户名
+    username: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+    },
+    // 密码
     password: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        len: [6, 128]
-      },
-      comment: '密码'
+      type: DataTypes.STRING(100),
+      allowNull: false
     },
+    // 论坛url
+    forumUrl: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+    },
+    // 邮箱
     email: {
-      type: DataTypes.STRING,
-      unique: true,
-      validate: { isEmail: true },
-      comment: '邮箱'
-    },
-    avatar: {
-      type: DataTypes.STRING,
-      defaultValue: 'default-avatar.jpg',
-      comment: '头像'
-    },
-    // 管理员
-    open: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-      allowNull: false,
-      comment: '是否管理员'
-    },
-    // 用户等级，默认1级
-    level: {
-      type: DataTypes.INTEGER,
-      defaultValue: 1,
-      allowNull: false,
+      type: DataTypes.STRING(100),
+      allowNull: true,
       validate: {
-        min: 1,
-        max: 10
-      },
-      comment: '等级'
+        isEmail: true
+      }
     },
-    // 手机号
+    // 电话
     phone: {
-      type: DataTypes.STRING,
-      validate: {
-        is:/^1[3-9]\d{9}$/
-      },
-      comment: '手机号'
+      type: DataTypes.STRING(20),
+      allowNull: true,
     },
-    // 金币数量
-    gold: {
-      type: DataTypes.INTEGER,
-      defaultValue: 0,
-      allowNull: false,
-      validate: {
-        min: 0,
-        max: 1000000000
-      },
-      comment: '金币'
-    },
-    // 历史金币总量
-    historyGold: {
-      type: DataTypes.INTEGER,
-      defaultValue: 0,
-      allowNull: false,
-      validate: {
-        min: 0,
-      },
-      comment: '历史金币'
-    },
-    // 购买的帖子ID列表
-    purchasedPostIds: {
-      type: DataTypes.JSON,
-      defaultValue: [],
-      allowNull: false,
-      comment: '购买的帖子ID列表'
-    },
+    // 到期时间
+    expireTime: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: () => {
+        const now = new Date();
+        now.setMonth(now.getMonth() + 1);
+        return now;
+      }
+    }
   }, {
     timestamps: true,
     freezeTableName: true
